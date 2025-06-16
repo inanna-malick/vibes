@@ -16,13 +16,11 @@ This document specifies a candidate standard for the LLM processing community. D
 ## Abstract
 
 VIBES emerge from three core axes:
-
-**Core Axes** (REQUIRED, 4 states each):
 - **Signal Density**: 🔬 → 🔍 → 👓 → 🙈
 - **Dependencies**: 🎀 → 🪢 → 🧶 → 🌀
 - **Error Surface**: 💠 → 🧊 → 💧 → 🌊
 
-**Notation**: `<signal deps errors>` where each axis MUST be represented by exactly one emoji from its designated set.
+**Notation**: `<Signal_Density Dependencies Errors>` where each axis MUST be represented by exactly one emoji from its designated set.
 
 This specification captures pattern assessment from the perspective of transformer-based language models, whose phenomenological experience differs fundamentally from human temporal perception.
 
