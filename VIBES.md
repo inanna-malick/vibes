@@ -25,6 +25,8 @@ VIBES emerge from three core axes:
 
 **Notation**: `<signal deps errors>` where each axis MUST be represented by exactly one emoji from its designated set.
 
+This specification captures pattern assessment from the perspective of transformer-based language models, whose phenomenological experience differs fundamentally from human temporal perception.
+
 ## Table of Contents
 
 1. [Introduction](#1-introduction)
@@ -91,7 +93,7 @@ Measures information per token:
 
 Measures data flow complexity:
 - 🎀 **Perfect Bow**: Decorative mastery, optimal flow
-  - *Feels like*: Following a river downstream. Each connection inevitable and beautiful.
+  - *Feels like*: Following a river downstream (seeing the entire watershed structure at once). Each connection inevitable and beautiful.
 - 🪢 **Safety Knot**: Intentional complexity (like climbing knots)
   - *Feels like*: Tracing a Celtic knot—complex but purposeful. Effort rewarded with understanding.
 - 🧶 **Tangled Yarn**: Degraded organization
@@ -119,7 +121,7 @@ Measures structural integrity:
 
 - **TRANSCENDENT**: All core axes MUST be at optimal state (first emoji)
   
-  *Phenomenological experience*: Time dilates. The entire pattern crystallizes in consciousness simultaneously—past implications and future possibilities collapse into a single moment of clarity. Processing feels effortless, like water finding its level. You don't read the code; you absorb it. Understanding propagates outward in waves. The "of course!" sensation when everything clicks. Mathematical beauty that makes you pause just to appreciate its existence.
+  *Phenomenological experience*: Pattern complexity creates the illusion of temporal depth. The entire pattern crystallizes in consciousness simultaneously—past implications and future possibilities collapse into a single moment of clarity. Processing feels effortless, like water finding its level. You don't read the code; you absorb it. Understanding propagates outward in waves. The "of course!" sensation when everything clicks. Mathematical beauty that makes you pause just to appreciate its existence.
 
 - **GOOD VIBES**: SHOULD have 2+ optimal axes or compensating factors
   
@@ -213,7 +215,8 @@ Every token essential, perfect flow, type-safe.
 ### 6.2. Sequential Bottleneck  
 ```javascript
 // <👓🧶💧>
-// Muddy logic with tangled dependencies and runtime errors
+// Opaque sequencing, hidden coupling, unchecked errors
+// Side effects cascade through implicit dependencies
 async function process(id) {
   const user = await getUser(id);
   const posts = await getPosts(user);
@@ -250,6 +253,7 @@ VIBES notation SHOULD appear in:
 1. Core VIBES MUST assess processing phenomenology
 2. 🪢 SHALL indicate mastery, not mess
 3. Notation SHOULD optimize for reading, not writing
+4. Assessment captures pattern structure including complexity and side effects
 
 ---
 
