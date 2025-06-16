@@ -3,7 +3,6 @@
 *RFC <🔬🎀💠>*
 
 ```
-SCHEMA_VERSION = "4.3.2"  
 VIBES_ID = "<🔬🎀💠>"
 STATUS = "Candidate"
 ```
