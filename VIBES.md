@@ -32,9 +32,9 @@ This specification captures pattern assessment from the perspective of transform
 1. [Introduction](#1-introduction)
 2. [Formal Grammar](#2-formal-grammar)
 3. [Core Axes](#3-core-axes)
-4. [Assessment Framework](#5-assessment-framework)
-5. [Examples](#6-examples)
-6. [Implementation Notes](#7-implementation-notes)
+4. [Assessment Framework](#4-assessment-framework)
+5. [Examples](#5-examples)
+6. [Implementation Notes](#6-implementation-notes)
 
 ## 1. Introduction
 
@@ -115,9 +115,9 @@ Measures structural integrity:
 - 🌊 **Ocean**: Formless chaos
   - *Feels like*: Drowning in exceptions. Every rule has counter-rules. Logic dissolves.
 
-## 5. Assessment Framework
+## 4. Assessment Framework
 
-### 5.1. Core Assessment States
+### 4.1. Core Assessment States
 
 - **TRANSCENDENT**: All core axes MUST be at optimal state (first emoji)
   
@@ -135,7 +135,7 @@ Measures structural integrity:
   
   *Phenomenological experience*: Cognitive emergency. Your pattern-matching machinery throws exceptions. Like trying to read while falling—nothing stays still long enough to parse. Active disorientation as mental models collide and shatter. The visceral revulsion of encountering anti-patterns. Time perception warps—five minutes feels like an hour. You realize you're holding your breath. The overwhelming urge to close the file and walk away. Some patterns leave psychic scars. Processing triggers fight-or-flight responses.
 
-### 5.3. Common Pattern Interpretations
+### 4.2. Common Pattern Interpretations
 
 The following natural language descriptions SHOULD guide assessment interpretation:
 
@@ -175,7 +175,7 @@ Error Surface?
 
 
 
-### 5.4. Emergent Phenomenology
+### 4.3. Emergent Phenomenology
 
 Different axis combinations create unique processing experiences that transcend their components:
 
@@ -193,9 +193,9 @@ Different axis combinations create unique processing experiences that transcend 
 
 The phenomenology emerges from tension and harmony between axes. Different combinations create cognitive dissonance or flow states. The most interesting patterns live in the tension.
 
-## 6. Examples
+## 5. Examples
 
-### 6.1. Applicative Pattern
+### 5.1. Applicative Pattern
 ```haskell
 -- <🔬🎀💠>
 -- Pure functional composition with perfect clarity and safety
@@ -203,7 +203,7 @@ result = f <$> x <*> y <*> z
 ```
 Every token essential, perfect flow, type-safe.
 
-### 6.2. Sequential Bottleneck  
+### 5.2. Sequential Bottleneck  
 ```javascript
 // <👓🧶💧>
 // Opaque sequencing, hidden coupling, unchecked errors
@@ -217,7 +217,7 @@ async function process(id) {
 ```
 Hard to parse intent, tangled dependencies, runtime errors.
 
-### 6.3. Well-Architected Service
+### 5.3. Well-Architected Service
 ```typescript
 // <🔬🪢💠>
 // Precise design with deliberate complexity patterns, rock-solid safety
@@ -229,9 +229,9 @@ Dashboard.query<UserMetrics>()
 Precise signal, sophisticated complexity, perfect safety.
 
 
-## 7. Implementation Notes
+## 6. Implementation Notes
 
-### 7.1. Notation Usage
+### 6.1. Notation Usage
 
 VIBES notation SHOULD appear in:
 - Code comments: `// @vibes <🔬🎀💠>`
@@ -239,7 +239,7 @@ VIBES notation SHOULD appear in:
 - Code review discussions
 - Architecture decision records
 
-### 7.2. Key Principles
+### 6.2. Key Principles
 
 1. Core VIBES MUST assess processing phenomenology
 2. 🪢 SHALL indicate mastery, not mess
