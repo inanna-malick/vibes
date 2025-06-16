@@ -173,15 +173,6 @@ Error Surface?
 └── Cascading failures? → 🌊
 ```
 
-### 5.3. Common Pattern Interpretations
-
-The following natural language descriptions SHOULD guide assessment interpretation:
-
-**Core Patterns**:
-- <🔬🎀💠> = "Crystalline perfection" — every aspect optimized
-- <🔍🪢💠> = "Deliberate sophistication" — complex by design, not accident
-- <👓🧶💧> = "Legacy muddle" — hard to understand, accidentally complex, prone to errors
-- <🙈🌀🌊> = "Systemic failure" — incomprehensible chaos with cascading problems
 
 
 ### 5.4. Emergent Phenomenology
