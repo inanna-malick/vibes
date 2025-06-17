@@ -374,8 +374,11 @@ HEIGHT = Intensity
         const baseWidth = 1200;
         const baseHeight = 700;
         const width = Math.min(baseWidth, window.innerWidth);
-        const height = Math.min(baseHeight, window.innerHeight * 0.7);
-        const scale = Math.min(80, width / 15);
+        const height = Math.min(baseHeight, window.innerHeight * 0.9);
+        
+        // Better spatial composition
+        const availableHeight = height - 200; // Account for UI elements
+        const scale = Math.min(140, availableHeight / 6, width / 12); // Increased from 80
         const gridSize = 3; // 0-3 for each axis (4 states)
         
         // Fixed isometric view angles
@@ -389,7 +392,7 @@ HEIGHT = Intensity
             .attr('viewBox', `0 0 ${width} ${height}`);
         const defs = svg.append('defs');
         const g = svg.append('g')
-            .attr('transform', `translate(${width/2}, ${height/2})`);
+            .attr('transform', `translate(${width/2}, ${height/2 + 60})`);
         
         // Emoji mappings - reversed so 3 is best
         const signalEmojis = ['🙈', '👓', '🔍', '🔬'];
@@ -1629,110 +1632,90 @@ all: \${OBJS}
             g.selectAll('.axis-emoji').remove();
             g.selectAll('.axis-tick').remove();
             g.selectAll('.axis-orb').remove();
+            g.selectAll('.axis-segment').remove();
+            g.selectAll('.axis-group').remove();
+            g.selectAll('.connecting-line').remove();
             
             // Current values from state
             const currentSignal = currentState.signal;
             const currentDeps = currentState.dependencies;
             const currentError = currentState.error;
             
-            // X-axis (Signal Density)
-            const xStart = project3D(-0.5, 0, 0);
-            const xEnd = project3D(3.5, 0, 0);
-            
             // Define 4 distinct color segments
             const segmentColors = ['#dc2626', '#f59e0b', '#84cc16', '#10b981']; // Red, Orange, Lime, Green
             
-            // Draw X axis as stepped/notched segments
+            // Offset for positioning axes outside cube (15px as specified)
+            const axisOffset = 15;
+            
+            // ===== X-axis (Signal Density) - Bottom front edge =====
+            // Position Y coordinate at bottom of cube plus offset
+            const xAxisY = project3D(0, -1, 0).y + axisOffset;
             const xAxisGroup = g.append('g').attr('class', 'x-axis-group');
             
             for (let i = 0; i < 4; i++) {
-                const segStart = project3D(Math.max(-0.5, i - 0.5), 0, 0);
-                const segEnd = project3D(Math.min(3.5, i + 0.5), 0, 0);
-                const notchStart = project3D(i - 0.1, 0, 0);
-                const notchEnd = project3D(i + 0.1, 0, 0);
+                const segStartX = project3D(Math.max(-0.5, i - 0.5), -1, 0).x;
+                const segEndX = project3D(Math.min(3.5, i + 0.5), -1, 0).x;
                 
                 // Draw main segment
                 xAxisGroup.append('line')
                     .attr('class', 'axis-segment x-axis')
                     .attr('data-value', i)
-                    .attr('x1', segStart.x)
-                    .attr('y1', segStart.y)
-                    .attr('x2', segEnd.x)
-                    .attr('y2', segEnd.y)
+                    .attr('x1', segStartX)
+                    .attr('y1', xAxisY)
+                    .attr('x2', segEndX)
+                    .attr('y2', xAxisY)
                     .attr('stroke', segmentColors[i])
                     .attr('stroke-width', 20)
                     .attr('stroke-linecap', i === 0 || i === 3 ? 'round' : 'butt')
+                    .attr('opacity', 0.7) // 50% transparency by default
                     .style('cursor', 'pointer')
                     .on('mouseover', function() {
-                        d3.select(this).attr('stroke-width', 24).style('filter', 'brightness(1.2)');
+                        d3.select(this)
+                            .attr('stroke-width', 24)
+                            .attr('opacity', 1)
+                            .style('filter', 'drop-shadow(0 0 10px currentColor)');
+                        // Show connecting line to cube
+                        const value = parseInt(d3.select(this).attr('data-value'));
+                        const cubePoint = project3D(value, -1, 0);
+                        g.append('line')
+                            .attr('class', 'connecting-line')
+                            .attr('x1', project3D(value, -1, 0).x)
+                            .attr('y1', xAxisY)
+                            .attr('x2', cubePoint.x)
+                            .attr('y2', cubePoint.y)
+                            .attr('stroke', segmentColors[i])
+                            .attr('stroke-width', 2)
+                            .attr('stroke-dasharray', '3,3')
+                            .attr('opacity', 0.5);
                     })
                     .on('mouseout', function() {
-                        d3.select(this).attr('stroke-width', 20).style('filter', null);
+                        d3.select(this)
+                            .attr('stroke-width', 20)
+                            .attr('opacity', 0.7)
+                            .style('filter', null);
+                        g.selectAll('.connecting-line').remove();
                     })
                     .on('click', function() {
                         const value = parseInt(d3.select(this).attr('data-value'));
                         updateAxisValue('signal', value);
                     });
                 
-                // Add notches between segments
-                if (i < 3) {
-                    const notchPos = project3D(i + 0.5, 0, 0);
-                    xAxisGroup.append('path')
-                        .attr('class', 'axis-notch')
-                        .attr('d', `M ${notchPos.x - 10} ${notchPos.y - 10} L ${notchPos.x} ${notchPos.y} L ${notchPos.x - 10} ${notchPos.y + 10}`)
-                        .attr('stroke', '#333')
-                        .attr('stroke-width', 2)
-                        .attr('fill', 'none');
-                }
-                
-                // Add position "detents" - thicker areas at valid positions
-                xAxisGroup.append('rect')
-                    .attr('class', 'axis-detent')
-                    .attr('x', notchStart.x - 2)
-                    .attr('y', notchStart.y - 12)
-                    .attr('width', notchEnd.x - notchStart.x + 4)
-                    .attr('height', 24)
-                    .attr('fill', segmentColors[i])
-                    .attr('opacity', 0.3)
-                    .attr('rx', 2);
-            }
-            
-            // X axis emoji endpoints
-            g.append('text')
-                .attr('class', 'axis-emoji')
-                .attr('x', xStart.x - 20)
-                .attr('y', xStart.y + 5)
-                .attr('text-anchor', 'end')
-                .style('font-size', '24px')
-                .text('🙈');
-            
-            g.append('text')
-                .attr('class', 'axis-emoji')
-                .attr('x', xEnd.x + 20)
-                .attr('y', xEnd.y + 5)
-                .attr('text-anchor', 'start')
-                .style('font-size', '24px')
-                .text('🔬');
-            
-            // X axis ticks and labels
-            for (let i = 0; i <= 3; i++) {
-                const tickPos = project3D(i, 0, 0);
-                
-                // Thicker tick marks
+                // Position tick marks
+                const tickX = project3D(i, -1, 0).x;
                 g.append('line')
                     .attr('class', 'axis-tick')
-                    .attr('x1', tickPos.x)
-                    .attr('y1', tickPos.y - 8)
-                    .attr('x2', tickPos.x)
-                    .attr('y2', tickPos.y + 8)
+                    .attr('x1', tickX)
+                    .attr('y1', xAxisY - 8)
+                    .attr('x2', tickX)
+                    .attr('y2', xAxisY + 8)
                     .attr('stroke', '#333')
                     .attr('stroke-width', 3);
                 
                 // Position labels
                 g.append('text')
                     .attr('class', 'axis-tick-label')
-                    .attr('x', tickPos.x)
-                    .attr('y', tickPos.y + 20)
+                    .attr('x', tickX)
+                    .attr('y', xAxisY + 25)
                     .attr('text-anchor', 'middle')
                     .style('font-size', '12px')
                     .style('font-weight', 'bold')
@@ -1740,97 +1723,183 @@ all: \${OBJS}
                     .text(i);
             }
             
-            // X axis current position orb
-            const xOrbPos = project3D(currentSignal, 0, 0);
-            g.append('circle')
-                .attr('class', 'axis-orb x-orb')
-                .attr('cx', xOrbPos.x)
-                .attr('cy', xOrbPos.y)
-                .attr('r', 12)
-                .attr('fill', '#4488ff')
-                .attr('stroke', '#fff')
-                .attr('stroke-width', 3)
-                .style('filter', 'drop-shadow(0 0 10px #4488ff)');
+            // X axis emoji endpoints
+            const xStartX = project3D(-0.5, -1, 0).x;
+            const xEndX = project3D(3.5, -1, 0).x;
+            g.append('text')
+                .attr('class', 'axis-emoji')
+                .attr('x', xStartX - 20)
+                .attr('y', xAxisY + 5)
+                .attr('text-anchor', 'end')
+                .style('font-size', '24px')
+                .text('🙈');
             
-            // Z-axis (Dependencies)
-            const zStart = project3D(0, 0, -0.5);
-            const zEnd = project3D(0, 0, 3.5);
+            g.append('text')
+                .attr('class', 'axis-emoji')
+                .attr('x', xEndX + 20)
+                .attr('y', xAxisY + 5)
+                .attr('text-anchor', 'start')
+                .style('font-size', '24px')
+                .text('🔬');
             
+            // ===== Y-axis (Error Surface) - Left vertical edge =====
+            const yAxisGroup = g.append('g').attr('class', 'y-axis-group');
+            const yAxisX = project3D(0, 0, 0).x - axisOffset; // Left edge offset
             
-            // Draw Z axis as stepped/notched segments
+            for (let i = 0; i < 4; i++) {
+                const segStartY = project3D(0, -1 + (Math.max(-0.5, i - 0.5) * 4/3), 0).y;
+                const segEndY = project3D(0, -1 + (Math.min(3.5, i + 0.5) * 4/3), 0).y;
+                
+                // Draw main segment
+                yAxisGroup.append('line')
+                    .attr('class', 'axis-segment y-axis')
+                    .attr('data-value', i)
+                    .attr('x1', yAxisX)
+                    .attr('y1', segStartY)
+                    .attr('x2', yAxisX)
+                    .attr('y2', segEndY)
+                    .attr('stroke', segmentColors[i])
+                    .attr('stroke-width', 20)
+                    .attr('stroke-linecap', i === 0 || i === 3 ? 'round' : 'butt')
+                    .attr('opacity', 0.7)
+                    .style('cursor', 'pointer')
+                    .on('mouseover', function() {
+                        d3.select(this)
+                            .attr('stroke-width', 24)
+                            .attr('opacity', 1)
+                            .style('filter', 'drop-shadow(0 0 10px currentColor)');
+                        // Show connecting line to cube
+                        const value = parseInt(d3.select(this).attr('data-value'));
+                        const cubePoint = project3D(0, -1 + (value * 4/3), 0);
+                        g.append('line')
+                            .attr('class', 'connecting-line')
+                            .attr('x1', yAxisX)
+                            .attr('y1', cubePoint.y)
+                            .attr('x2', cubePoint.x)
+                            .attr('y2', cubePoint.y)
+                            .attr('stroke', segmentColors[i])
+                            .attr('stroke-width', 2)
+                            .attr('stroke-dasharray', '3,3')
+                            .attr('opacity', 0.5);
+                    })
+                    .on('mouseout', function() {
+                        d3.select(this)
+                            .attr('stroke-width', 20)
+                            .attr('opacity', 0.7)
+                            .style('filter', null);
+                        g.selectAll('.connecting-line').remove();
+                    })
+                    .on('click', function() {
+                        const value = parseInt(d3.select(this).attr('data-value'));
+                        updateAxisValue('error', value);
+                    });
+                
+                // Position tick marks
+                const tickY = project3D(0, -1 + (i * 4/3), 0).y;
+                g.append('line')
+                    .attr('class', 'axis-tick')
+                    .attr('x1', yAxisX - 8)
+                    .attr('y1', tickY)
+                    .attr('x2', yAxisX + 8)
+                    .attr('y2', tickY)
+                    .attr('stroke', '#333')
+                    .attr('stroke-width', 3);
+                
+                // Position labels
+                g.append('text')
+                    .attr('class', 'axis-tick-label')
+                    .attr('x', yAxisX - 25)
+                    .attr('y', tickY + 5)
+                    .attr('text-anchor', 'middle')
+                    .style('font-size', '12px')
+                    .style('font-weight', 'bold')
+                    .style('fill', '#666')
+                    .text(i);
+            }
+            
+            // Y axis emoji endpoints
+            const yStartY = project3D(0, -1, 0).y;
+            const yEndY = project3D(0, 3, 0).y;
+            g.append('text')
+                .attr('class', 'axis-emoji')
+                .attr('x', yAxisX - 30)
+                .attr('y', yStartY + 5)
+                .attr('text-anchor', 'middle')
+                .style('font-size', '24px')
+                .text('🌊');
+            
+            g.append('text')
+                .attr('class', 'axis-emoji')
+                .attr('x', yAxisX - 30)
+                .attr('y', yEndY + 5)
+                .attr('text-anchor', 'middle')
+                .style('font-size', '24px')
+                .text('💠');
+            
+            // ===== Z-axis (Dependencies) - Bottom left edge going back =====
             const zAxisGroup = g.append('g').attr('class', 'z-axis-group');
             
             for (let i = 0; i < 4; i++) {
-                const segStart = project3D(0, 0, Math.max(-0.5, i - 0.5));
-                const segEnd = project3D(0, 0, Math.min(3.5, i + 0.5));
-                const notchStart = project3D(0, 0, i - 0.1);
-                const notchEnd = project3D(0, 0, i + 0.1);
+                const segStart = project3D(0, -1, Math.max(-0.5, i - 0.5));
+                const segEnd = project3D(0, -1, Math.min(3.5, i + 0.5));
+                // Offset the Z axis down slightly from cube bottom
+                const offsetY = axisOffset;
                 
                 // Draw main segment
                 zAxisGroup.append('line')
                     .attr('class', 'axis-segment z-axis')
                     .attr('data-value', i)
                     .attr('x1', segStart.x)
-                    .attr('y1', segStart.y)
+                    .attr('y1', segStart.y + offsetY)
                     .attr('x2', segEnd.x)
-                    .attr('y2', segEnd.y)
+                    .attr('y2', segEnd.y + offsetY)
                     .attr('stroke', segmentColors[i])
                     .attr('stroke-width', 20)
                     .attr('stroke-linecap', i === 0 || i === 3 ? 'round' : 'butt')
+                    .attr('opacity', 0.7)
                     .style('cursor', 'pointer')
                     .on('mouseover', function() {
-                        d3.select(this).attr('stroke-width', 24).style('filter', 'brightness(1.2)');
+                        d3.select(this)
+                            .attr('stroke-width', 24)
+                            .attr('opacity', 1)
+                            .style('filter', 'drop-shadow(0 0 10px currentColor)');
+                        // Show connecting line to cube
+                        const value = parseInt(d3.select(this).attr('data-value'));
+                        const cubePoint = project3D(0, -1, value);
+                        const axisPoint = project3D(0, -1, value);
+                        g.append('line')
+                            .attr('class', 'connecting-line')
+                            .attr('x1', axisPoint.x)
+                            .attr('y1', axisPoint.y + offsetY)
+                            .attr('x2', cubePoint.x)
+                            .attr('y2', cubePoint.y)
+                            .attr('stroke', segmentColors[i])
+                            .attr('stroke-width', 2)
+                            .attr('stroke-dasharray', '3,3')
+                            .attr('opacity', 0.5);
                     })
                     .on('mouseout', function() {
-                        d3.select(this).attr('stroke-width', 20).style('filter', null);
+                        d3.select(this)
+                            .attr('stroke-width', 20)
+                            .attr('opacity', 0.7)
+                            .style('filter', null);
+                        g.selectAll('.connecting-line').remove();
                     })
                     .on('click', function() {
                         const value = parseInt(d3.select(this).attr('data-value'));
                         updateAxisValue('dependencies', value);
                     });
                 
-                // Add notches between segments
-                if (i < 3) {
-                    const notchPos = project3D(0, 0, i + 0.5);
-                    zAxisGroup.append('path')
-                        .attr('class', 'axis-notch')
-                        .attr('d', `M ${notchPos.x - 7} ${notchPos.y - 7} L ${notchPos.x} ${notchPos.y} L ${notchPos.x + 7} ${notchPos.y - 7}`)
-                        .attr('stroke', '#333')
-                        .attr('stroke-width', 2)
-                        .attr('fill', 'none');
-                }
-            }
-            
-            // Z axis emoji endpoints
-            g.append('text')
-                .attr('class', 'axis-emoji')
-                .attr('x', zStart.x - 15)
-                .attr('y', zStart.y - 10)
-                .attr('text-anchor', 'end')
-                .style('font-size', '24px')
-                .text('🌀');
-            
-            g.append('text')
-                .attr('class', 'axis-emoji')
-                .attr('x', zEnd.x + 15)
-                .attr('y', zEnd.y + 10)
-                .attr('text-anchor', 'start')
-                .style('font-size', '24px')
-                .text('🎀');
-            
-            // Z axis ticks and labels
-            for (let i = 0; i <= 3; i++) {
-                const tickPos = project3D(0, 0, i);
+                // Position tick marks
+                const tickPos = project3D(0, -1, i);
                 const perpX = 8;
                 const perpY = -8;
-                
-                // Thicker tick marks
                 g.append('line')
                     .attr('class', 'axis-tick')
                     .attr('x1', tickPos.x - perpX)
-                    .attr('y1', tickPos.y - perpY)
+                    .attr('y1', tickPos.y + offsetY - perpY)
                     .attr('x2', tickPos.x + perpX)
-                    .attr('y2', tickPos.y + perpY)
+                    .attr('y2', tickPos.y + offsetY + perpY)
                     .attr('stroke', '#333')
                     .attr('stroke-width', 3);
                 
@@ -1838,7 +1907,7 @@ all: \${OBJS}
                 g.append('text')
                     .attr('class', 'axis-tick-label')
                     .attr('x', tickPos.x + 15)
-                    .attr('y', tickPos.y - 15)
+                    .attr('y', tickPos.y + offsetY - 15)
                     .attr('text-anchor', 'middle')
                     .style('font-size', '12px')
                     .style('font-weight', 'bold')
@@ -1846,124 +1915,25 @@ all: \${OBJS}
                     .text(i);
             }
             
-            // Z axis current position orb
-            const zOrbPos = project3D(0, 0, currentDeps);
-            g.append('circle')
-                .attr('class', 'axis-orb z-orb')
-                .attr('cx', zOrbPos.x)
-                .attr('cy', zOrbPos.y)
-                .attr('r', 12)
-                .attr('fill', '#4488ff')
-                .attr('stroke', '#fff')
-                .attr('stroke-width', 3)
-                .style('filter', 'drop-shadow(0 0 10px #4488ff)');
-            
-            // Y-axis (Error Surface)
-            const yStart = project3D(0, -1, 0);
-            const yEnd = project3D(0, 3, 0);
-            
-            
-            // Draw Y axis as stepped/notched segments
-            const yAxisGroup = g.append('g').attr('class', 'y-axis-group');
-            
-            for (let i = 0; i < 4; i++) {
-                const segStartY = -1 + (Math.max(-0.5, i - 0.5) * 4/3);
-                const segEndY = -1 + (Math.min(3.5, i + 0.5) * 4/3);
-                const segStart = project3D(0, segStartY, 0);
-                const segEnd = project3D(0, segEndY, 0);
-                
-                // Draw main segment
-                yAxisGroup.append('line')
-                    .attr('class', 'axis-segment y-axis')
-                    .attr('data-value', i)
-                    .attr('x1', segStart.x)
-                    .attr('y1', segStart.y)
-                    .attr('x2', segEnd.x)
-                    .attr('y2', segEnd.y)
-                    .attr('stroke', segmentColors[i])
-                    .attr('stroke-width', 20)
-                    .attr('stroke-linecap', i === 0 || i === 3 ? 'round' : 'butt')
-                    .style('cursor', 'pointer')
-                    .on('mouseover', function() {
-                        d3.select(this).attr('stroke-width', 24).style('filter', 'brightness(1.2)');
-                    })
-                    .on('mouseout', function() {
-                        d3.select(this).attr('stroke-width', 20).style('filter', null);
-                    })
-                    .on('click', function() {
-                        const value = parseInt(d3.select(this).attr('data-value'));
-                        updateAxisValue('error', value);
-                    });
-                
-                // Add notches between segments
-                if (i < 3) {
-                    const notchY = -1 + ((i + 0.5) * 4/3);
-                    const notchPos = project3D(0, notchY, 0);
-                    yAxisGroup.append('path')
-                        .attr('class', 'axis-notch')
-                        .attr('d', `M ${notchPos.x - 10} ${notchPos.y} L ${notchPos.x} ${notchPos.y} L ${notchPos.x - 10} ${notchPos.y}`)
-                        .attr('stroke', '#333')
-                        .attr('stroke-width', 2)
-                        .attr('fill', 'none');
-                }
-            }
-            
-            // Y axis emoji endpoints
+            // Z axis emoji endpoints
+            const zStart = project3D(0, -1, -0.5);
+            const zEnd = project3D(0, -1, 3.5);
+            const offsetY = axisOffset;
             g.append('text')
                 .attr('class', 'axis-emoji')
-                .attr('x', yStart.x - 30)
-                .attr('y', yStart.y + 5)
-                .attr('text-anchor', 'middle')
+                .attr('x', zStart.x - 15)
+                .attr('y', zStart.y + offsetY - 10)
+                .attr('text-anchor', 'end')
                 .style('font-size', '24px')
-                .text('🌊');
+                .text('🌀');
             
             g.append('text')
                 .attr('class', 'axis-emoji')
-                .attr('x', yEnd.x - 30)
-                .attr('y', yEnd.y + 5)
-                .attr('text-anchor', 'middle')
+                .attr('x', zEnd.x + 15)
+                .attr('y', zEnd.y + offsetY + 10)
+                .attr('text-anchor', 'start')
                 .style('font-size', '24px')
-                .text('💠');
-            
-            // Y axis ticks and labels
-            for (let i = 0; i <= 3; i++) {
-                const tickY = -1 + (i * 4/3);
-                const tickPos = project3D(0, tickY, 0);
-                
-                // Thicker tick marks
-                g.append('line')
-                    .attr('class', 'axis-tick')
-                    .attr('x1', tickPos.x - 8)
-                    .attr('y1', tickPos.y)
-                    .attr('x2', tickPos.x + 8)
-                    .attr('y2', tickPos.y)
-                    .attr('stroke', '#333')
-                    .attr('stroke-width', 3);
-                
-                // Position labels
-                g.append('text')
-                    .attr('class', 'axis-tick-label')
-                    .attr('x', tickPos.x - 20)
-                    .attr('y', tickPos.y + 5)
-                    .attr('text-anchor', 'middle')
-                    .style('font-size', '12px')
-                    .style('font-weight', 'bold')
-                    .style('fill', '#666')
-                    .text(i);
-            }
-            
-            // Y axis current position orb
-            const yValue = -1 + (currentError * 4/3);
-            const yOrbPos = project3D(0, yValue, 0);
-            g.append('circle')
-                .attr('class', 'axis-orb y-orb')
-                .attr('cx', yOrbPos.x)
-                .attr('cy', yOrbPos.y)
-                .attr('r', 12)
-                .attr('fill', '#4488ff')
-                .attr('stroke', '#fff')
-                .attr('stroke-width', 3)
-                .style('filter', 'drop-shadow(0 0 10px #4488ff)');
+                .text('🎀');
         }
         
         function showStateDescription(vertex) {
