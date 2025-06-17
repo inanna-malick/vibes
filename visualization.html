@@ -1648,22 +1648,23 @@ all: \${OBJS}
             const axisOffset = 25;
             
             // ===== X-axis (Signal Density) - Bottom front edge =====
-            // Position Y coordinate completely below cube bounds (cube Y goes -1 to 4, Z at front edge = 0)
-            const xAxisY = project3D(0, -1, -0.5).y + axisOffset;
+            // Use same Z coordinate as cube front edge (Z=0) for perfect alignment
             const xAxisGroup = g.append('g').attr('class', 'x-axis-group');
             
             for (let i = 0; i < 4; i++) {
-                const segStartX = project3D(Math.max(-0.5, i - 0.5), -1, -0.5).x;
-                const segEndX = project3D(Math.min(3.5, i + 0.5), -1, -0.5).x;
+                // Match cube's front edge coordinates exactly: Z=0, offset Y downward after projection
+                const segStart3D = project3D(Math.max(-0.5, i - 0.5), -1, 0);
+                const segEnd3D = project3D(Math.min(3.5, i + 0.5), -1, 0);
+                const offsetY = axisOffset; // Move down from cube edge
                 
-                // Draw main segment
+                // Draw main segment using projected coordinates
                 xAxisGroup.append('line')
                     .attr('class', 'axis-segment x-axis')
                     .attr('data-value', i)
-                    .attr('x1', segStartX)
-                    .attr('y1', xAxisY)
-                    .attr('x2', segEndX)
-                    .attr('y2', xAxisY)
+                    .attr('x1', segStart3D.x)
+                    .attr('y1', segStart3D.y + offsetY)
+                    .attr('x2', segEnd3D.x)
+                    .attr('y2', segEnd3D.y + offsetY)
                     .attr('stroke', segmentColors[i])
                     .attr('stroke-width', 20)
                     .attr('stroke-linecap', i === 0 || i === 3 ? 'round' : 'butt')
@@ -1700,22 +1701,22 @@ all: \${OBJS}
                         updateAxisValue('signal', value);
                     });
                 
-                // Position tick marks
-                const tickX = project3D(i, -1, -0.5).x;
+                // Position tick marks using corrected coordinates
+                const tick3D = project3D(i, -1, 0);
                 g.append('line')
                     .attr('class', 'axis-tick')
-                    .attr('x1', tickX)
-                    .attr('y1', xAxisY - 8)
-                    .attr('x2', tickX)
-                    .attr('y2', xAxisY + 8)
+                    .attr('x1', tick3D.x)
+                    .attr('y1', tick3D.y + offsetY - 8)
+                    .attr('x2', tick3D.x)
+                    .attr('y2', tick3D.y + offsetY + 8)
                     .attr('stroke', '#333')
                     .attr('stroke-width', 3);
                 
-                // Position labels
+                // Position labels using corrected coordinates
                 g.append('text')
                     .attr('class', 'axis-tick-label')
-                    .attr('x', tickX)
-                    .attr('y', xAxisY + 25)
+                    .attr('x', tick3D.x)
+                    .attr('y', tick3D.y + offsetY + 25)
                     .attr('text-anchor', 'middle')
                     .style('font-size', '12px')
                     .style('font-weight', 'bold')
@@ -1723,43 +1724,44 @@ all: \${OBJS}
                     .text(i);
             }
             
-            // X axis emoji endpoints
-            const xStartX = project3D(-0.5, -1, -0.5).x;
-            const xEndX = project3D(3.5, -1, -0.5).x;
+            // X axis emoji endpoints using corrected coordinates
+            const xStart3D = project3D(-0.5, -1, 0);
+            const xEnd3D = project3D(3.5, -1, 0);
             g.append('text')
                 .attr('class', 'axis-emoji')
-                .attr('x', xStartX - 20)
-                .attr('y', xAxisY + 5)
+                .attr('x', xStart3D.x - 20)
+                .attr('y', xStart3D.y + axisOffset + 5)
                 .attr('text-anchor', 'end')
                 .style('font-size', '24px')
                 .text('🙈');
             
             g.append('text')
                 .attr('class', 'axis-emoji')
-                .attr('x', xEndX + 20)
-                .attr('y', xAxisY + 5)
+                .attr('x', xEnd3D.x + 20)
+                .attr('y', xEnd3D.y + axisOffset + 5)
                 .attr('text-anchor', 'start')
                 .style('font-size', '24px')
                 .text('🔬');
             
-            // ===== Y-axis (Error Surface) - Left vertical edge =====
+            // ===== Y-axis (Error Surface) - Using 3D→2D projection like X and Z =====
             const yAxisGroup = g.append('g').attr('class', 'y-axis-group');
-            // Position Y-axis completely to the left in screen coordinates
-            const yAxisX = -300; // Fixed screen X position, far left of visualization
             
+            // Draw Y axis as stepped/notched segments using 3D space
             for (let i = 0; i < 4; i++) {
-                // Use fixed screen coordinates for vertical Y-axis
-                const segStartY = -200 + (Math.max(-0.5, i - 0.5) * 100); // bottom to top
-                const segEndY = -200 + (Math.min(3.5, i + 0.5) * 100);
+                // Define Y-axis in 3D cube space (left edge, outside cube bounds)
+                const segStart3D = project3D(-0.5, -1 + (Math.max(-0.5, i - 0.5) * 4/3), -0.5);
+                const segEnd3D = project3D(-0.5, -1 + (Math.min(3.5, i + 0.5) * 4/3), -0.5);
+                // Offset further left from cube edge
+                const offsetX = -25;
                 
-                // Draw main segment
+                // Draw main segment using projected 3D coordinates
                 yAxisGroup.append('line')
                     .attr('class', 'axis-segment y-axis')
                     .attr('data-value', i)
-                    .attr('x1', yAxisX)
-                    .attr('y1', segStartY)
-                    .attr('x2', yAxisX)
-                    .attr('y2', segEndY)
+                    .attr('x1', segStart3D.x + offsetX)
+                    .attr('y1', segStart3D.y)
+                    .attr('x2', segEnd3D.x + offsetX)
+                    .attr('y2', segEnd3D.y)
                     .attr('stroke', segmentColors[i])
                     .attr('stroke-width', 20)
                     .attr('stroke-linecap', i === 0 || i === 3 ? 'round' : 'butt')
@@ -1775,7 +1777,7 @@ all: \${OBJS}
                         const cubePoint = project3D(0, -1 + (value * 4/3), 0);
                         g.append('line')
                             .attr('class', 'connecting-line')
-                            .attr('x1', yAxisX)
+                            .attr('x1', segStart3D.x + offsetX)
                             .attr('y1', cubePoint.y)
                             .attr('x2', cubePoint.x)
                             .attr('y2', cubePoint.y)
@@ -1796,22 +1798,22 @@ all: \${OBJS}
                         updateAxisValue('error', value);
                     });
                 
-                // Position tick marks using screen coordinates
-                const tickY = -200 + (i * 100); // evenly spaced vertically
+                // Position tick marks using 3D projection
+                const tick3D = project3D(-0.5, -1 + (i * 4/3), -0.5);
                 g.append('line')
                     .attr('class', 'axis-tick')
-                    .attr('x1', yAxisX - 8)
-                    .attr('y1', tickY)
-                    .attr('x2', yAxisX + 8)
-                    .attr('y2', tickY)
+                    .attr('x1', tick3D.x + offsetX - 8)
+                    .attr('y1', tick3D.y)
+                    .attr('x2', tick3D.x + offsetX + 8)
+                    .attr('y2', tick3D.y)
                     .attr('stroke', '#333')
                     .attr('stroke-width', 3);
                 
-                // Position labels
+                // Position labels using 3D projection
                 g.append('text')
                     .attr('class', 'axis-tick-label')
-                    .attr('x', yAxisX - 25)
-                    .attr('y', tickY + 5)
+                    .attr('x', tick3D.x + offsetX - 25)
+                    .attr('y', tick3D.y + 5)
                     .attr('text-anchor', 'middle')
                     .style('font-size', '12px')
                     .style('font-weight', 'bold')
@@ -1819,21 +1821,23 @@ all: \${OBJS}
                     .text(i);
             }
             
-            // Y axis emoji endpoints using screen coordinates
-            const yStartY = 250;  // bottom
-            const yEndY = -250;   // top
+            // Y axis emoji endpoints using 3D projection
+            const yStart3D = project3D(-0.5, -1.5, -0.5);
+            const yEnd3D = project3D(-0.5, 4.5, -0.5);
+            const offsetX = -25;
+            
             g.append('text')
                 .attr('class', 'axis-emoji')
-                .attr('x', yAxisX - 30)
-                .attr('y', yStartY + 5)
+                .attr('x', yStart3D.x + offsetX - 30)
+                .attr('y', yStart3D.y + 5)
                 .attr('text-anchor', 'middle')
                 .style('font-size', '24px')
                 .text('🌊');
             
             g.append('text')
                 .attr('class', 'axis-emoji')
-                .attr('x', yAxisX - 30)
-                .attr('y', yEndY + 5)
+                .attr('x', yEnd3D.x + offsetX - 30)
+                .attr('y', yEnd3D.y + 5)
                 .attr('text-anchor', 'middle')
                 .style('font-size', '24px')
                 .text('💠');
