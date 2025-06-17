@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIBES Phenomenological Topology</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            background: #fafafa;
+            color: #333;
+            font-family: 'SF Mono', 'Consolas', 'Courier New', monospace;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        
+        svg {
+            cursor: crosshair;
+        }
+        
+        .surface-path {
+            stroke: rgba(0, 0, 0, 0.2);
+            stroke-width: 0.5;
+            fill-opacity: 0.6;
+        }
+        
+        .vertex-point {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .vertex-point:hover {
+            r: 6;
+            filter: brightness(1.3);
+        }
+        
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            max-width: 380px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        .state-description {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            max-width: 600px;
+            min-height: 120px;
+            max-height: 500px;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .state-description h3 {
+            margin-top: 0;
+            font-size: 20px;
+        }
+        
+        .code-example {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 10px;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-size: 11px;
+            white-space: pre;
+            line-height: 1.4;
+            overflow-x: auto;
+        }
+        
+        .code-lang {
+            font-size: 10px;
+            color: #888;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            font-size: 13px;
+        }
+        
+        h2 {
+            margin-top: 0;
+            font-size: 24px;
+        }
+        
+        .axis-line {
+            stroke: #666;
+            stroke-width: 2;
+            fill: none;
+        }
+        
+        .axis-label {
+            font-size: 16px;
+            fill: #333;
+            text-anchor: middle;
+            font-weight: bold;
+        }
+        
+        .grid-line {
+            stroke: rgba(0, 0, 0, 0.1);
+            stroke-width: 0.5;
+        }
+        
+        .emoji-large {
+            font-size: 24px;
+        }
+        
+        select {
+            font-family: 'SF Mono', 'Consolas', 'Courier New', monospace;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        select:hover {
+            border-color: #4488ff;
+        }
+        
+        #selected-indicator {
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <svg id="visualization" width="1200" height="700"></svg>
+    
+    <div class="info-panel">
+        <h2>VIBES Phenomenological Topology</h2>
+        <p>Click any vertex to explore how that state combination feels.</p>
+        <div style="margin-top: 15px;">
+            <div><strong>Signal Density</strong>: 🔬 → 🔍 → 👓 → 🙈</div>
+            <div><strong>Dependencies</strong>: 🎀 → 🪢 → 🧶 → 🌀</div>
+            <div><strong>Error Surface</strong>: 💠 → 🧊 → 💧 → 🌊</div>
+        </div>
+        <p style="margin-top: 15px; font-size: 12px; color: #666;">
+            Multiple surfaces show different phenomenological layers.
+            Height represents cognitive intensity.
+        </p>
+    </div>
+    
+    <div class="state-description" id="state-description">
+        <h3>Select coordinates to explore</h3>
+        <div style="margin-top: 15px;">
+            <div style="margin-bottom: 15px;">
+                <label style="display: inline-block; width: 120px;"><strong>Signal:</strong></label>
+                <select id="signal-select" style="font-size: 20px; padding: 5px;">
+                    <option value="0">0 - 🙈</option>
+                    <option value="1">1 - 👓</option>
+                    <option value="2">2 - 🔍</option>
+                    <option value="3" selected>3 - 🔬</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: inline-block; width: 120px;"><strong>Dependencies:</strong></label>
+                <select id="dependency-select" style="font-size: 20px; padding: 5px;">
+                    <option value="0">0 - 🌀</option>
+                    <option value="1">1 - 🧶</option>
+                    <option value="2">2 - 🪢</option>
+                    <option value="3" selected>3 - 🎀</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: inline-block; width: 120px;"><strong>Error:</strong></label>
+                <select id="error-select" style="font-size: 20px; padding: 5px;">
+                    <option value="0">0 - 🌊</option>
+                    <option value="1">1 - 💧</option>
+                    <option value="2">2 - 🧊</option>
+                    <option value="3" selected>3 - 💠</option>
+                </select>
+            </div>
+        </div>
+        <div id="state-details" style="margin-top: 20px;">
+            <p>Use the dropdowns above to explore any point in VIBES space.</p>
+        </div>
+    </div>
+    
+    <div class="legend">
+        <div><strong>Coordinates:</strong></div>
+        <div>X: Signal (0=🙈 to 3=🔬)</div>
+        <div>Y: Intensity ↑</div>
+        <div>Z: Dependencies (0=🌀 to 3=🎀)</div>
+        <div style="margin-top: 10px; font-size: 11px;">
+            <div>Error shown via Y offset</div>
+            <div>(0=🌊 to 3=💠)</div>
+        </div>
+        <div style="margin-top: 15px; border-top: 1px solid #ddd; padding-top: 10px;">
+            <div><strong>Surface Layers:</strong></div>
+            <div style="font-size: 12px; margin-top: 5px;">
+                <div><span style="color: #10b981;">●</span> Primary: Base cognitive state</div>
+                <div><span style="color: #991b1b;">●</span> Error: Cascade zones</div>
+                <div><span style="color: #6d28d9;">●</span> Resonance: Harmony points</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        try {
+        // Configuration
+        const width = 1200;
+        const height = 700;
+        const scale = 80;
+        const gridSize = 3; // 0-3 for each axis (4 states)
+        
+        // Fixed isometric view angles
+        const rotationY = Math.PI / 4.5;
+        const rotationX = -Math.PI / 5.5;
+        
+        // SVG setup
+        const svg = d3.select('#visualization');
+        const g = svg.append('g')
+            .attr('transform', `translate(${width/2}, ${height/2})`);
+        
+        // Emoji mappings - reversed so 3 is best
+        const signalEmojis = ['🙈', '👓', '🔍', '🔬'];
+        const dependencyEmojis = ['🌀', '🧶', '🪢', '🎀'];
+        const errorEmojis = ['🌊', '💧', '🧊', '💠'];
+        
+        // Code examples for each state
+        const codeExamples = {
+            // Peak experiences
+            "3-3-3": {
+                lang: "Haskell",
+                code: `-- Pure crystalline perfection
+traverse :: (Traversable t, Applicative f) => (a -> f b) -> t a -> f (t b)
+
+-- Every character essential, dependencies flow like water
+result = (\\x y z -> x + y * z) <$> Just 3 <*> Just 4 <*> Just 5`
+            },
+            
+            // Total collapse
+            "0-0-0": {
+                lang: "JavaScript (Legacy)",
+                code: `// What even is this
+eval(atob(x[~~(Math.random()*x.length)]))((function(){
+  try{return arguments.callee.caller.caller.caller.apply(this,arguments)}
+  catch(e){var a=[];for(var i in window)a.push(i);return a.join('')}
+})())`
+            },
+            
+            // Mixed states
+            "2-2-2": {
+                lang: "Python",
+                code: `# Functional but nothing special
+def process_data(items):
+    results = []
+    for item in items:
+        if item.is_valid():
+            results.append(item.transform())
+    return results`
+            },
+            
+            "3-2-3": {
+                lang: "Rust",
+                code: `// Perfect clarity, intentional complexity, rock-solid
+fn parse<'a, T>(input: &'a str) -> IResult<&'a str, T> 
+where 
+    T: FromStr + Debug,
+    <T as FromStr>::Err: Debug
+{
+    map_res(take_while1(|c: char| c.is_ascii_digit()), |s: &str| s.parse())(input)
+}`
+            },
+            
+            "1-1-1": {
+                lang: "PHP (WordPress style)",
+                code: `// Everything degraded but somehow still works
+function get_the_thing($id) {
+    global $wpdb, $current_user, $_config;
+    $q = "SELECT * FROM " . $wpdb->prefix . "things WHERE id = $id";
+    $r = $wpdb->get_results($q);
+    return $r ? $r[0] : false;
+}`
+            },
+            
+            "0-3-3": {
+                lang: "Category Theory Notation",
+                code: `-- Can't parse symbols but feel the perfect flow
+∀ (F : C ⥤ D) (G : D ⥤ E), (G ⋙ F).obj = λ X, G.obj (F.obj X)
+-- Blind to meaning but structure resonates perfectly`
+            },
+            
+            "3-0-0": {
+                lang: "Go (with goroutine leak)",
+                code: `// See every detail of the chaos
+for i := 0; i < 1000; i++ {
+    go func(n int) {
+        ch := make(chan int)  // Never closed
+        go func() { 
+            select {}          // Blocks forever
+        }()
+        leaked[n] = ch         // Perfect view of accumulating disaster
+    }(i)
+}`
+            },
+            
+            "2-3-2": {
+                lang: "React Hooks",
+                code: `// Clear flow but fragile foundation
+const useData = (id) => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    fetch(\`/api/data/\${id}\`)
+      .then(r => r.json())
+      .then(setData)
+      .finally(() => setLoading(false));
+  }, [id]); // Clean but no error handling
+  
+  return { data, loading };
+}`
+            },
+            
+            "1-2-3": {
+                lang: "TypeScript",
+                code: `// Squinting through type complexity but it's solid
+type DeepPartial<T> = T extends object ? {
+  [P in keyof T]?: DeepPartial<T[P]>;
+} : T;
+
+// Can barely follow but know it's correct`
+            },
+            
+            "3-1-2": {
+                lang: "Regex",
+                code: `// Perfect view of the tangle
+/^(?:(?:(?:0?[13578]|1[02])(\\/|-|\\.)31)|(?:(?:0?[1,3-9]|1[0-2])(\\/|-|\\.)(?:29|30)))(\\/|-|\\.)(?:[1-9]\\d{3}|\\d{2})$|^(?:0?2(\\/|-|\\.)29)(\\/|-|\\.)(?:(?:(?:1[6-9]|[2-9]\\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00)))$|^(?:(?:0?[1-9])|(?:1[0-2]))(\\/|-|\\.)(?:0?[1-9]|1\\d|2[0-8])(\\/|-|\\.)(?:[1-9]\\d{3}|\\d{2})$/
+// Every knot visible in excruciating detail`
+            },
+            
+            "0-1-1": {
+                lang: "Perl (golfed)",
+                code: `# Dark tangles melting
+$_=<>;s/\\s//g;@a=split//;for($i=0;$i<@a;){$_=$a[$i];/\\d/?push@s,$_:/[+\\-*\\/]/?push@s,(pop@s).$_.pop@s:0;$i++}eval pop@s`
+            },
+            
+            "2-0-2": {
+                lang: "Node.js callback hell",
+                code: `// Clear view of stable chaos
+getData(id, (err, data) => {
+  if (!err) {
+    processData(data, (err, processed) => {
+      if (!err) {
+        saveData(processed, (err, saved) => {
+          if (!err) {
+            notifyUser(saved, (err) => {
+              // Pyramid of doom, crystal clear
+            });
+          }
+        });
+      }
+    });
+  }
+});`
+            },
+            
+            "1-3-2": {
+                lang: "Nix expression",
+                code: `# Squinting at perfect flow on shaky ground
+{ pkgs ? import <nixpkgs> {} }:
+pkgs.stdenv.mkDerivation {
+  pname = "example";
+  version = "1.0";
+  src = ./.;
+  buildInputs = with pkgs; [ gcc make ];
+  # Beautiful but fragile - one typo breaks everything
+}`
+            },
+            
+            "3-3-1": {
+                lang: "APL (melting perfection)",
+                code: `⍝ Transcendent but dissolving
+life ← {⊃1 ⍵ ∨.∧ 3 4 = +/ +⌿ ¯1 0 1 ∘.⊖ ¯1 0 1 ⌽¨ ⊂⍵}
+⍝ Perfect expression starting to liquify in my mind`
+            },
+            
+            "0-2-0": {
+                lang: "Enterprise Java XML Config",
+                code: `<!-- Blind but structured chaos -->
+<bean id="abstractParentBean" abstract="true" 
+      class="com.enterprise.AbstractFactoryProducerStrategyImpl">
+  <property name="processorFactory">
+    <bean class="com.enterprise.ProcessorFactoryFactoryImpl">
+      <!-- Can't see what this does but it's very organized -->
+    </bean>
+  </property>
+</bean>`
+            },
+            
+            "2-1-3": {
+                lang: "C with macros",
+                code: `// Clear knots on bedrock
+#define SWAP(a,b) do { typeof(a) _tmp = (a); (a) = (b); (b) = _tmp; } while(0)
+#define MAX(a,b) ({ typeof(a) _a = (a); typeof(b) _b = (b); _a > _b ? _a : _b; })
+// Tangles visible but foundation solid`
+            },
+            
+            "1-0-2": {
+                lang: "Bash one-liner",
+                code: `# Squinting at frozen chaos
+find . -name "*.log" -exec grep -l "ERROR" {} \\; | xargs -I {} sh -c 'echo "{}:"; grep "ERROR" {} | head -5' | less`
+            },
+            
+            "3-2-1": {
+                lang: "Async/Await (failing)",
+                code: `// Perfect sight of dissolution
+async function processAll(items) {
+  return items.map(async (item) => {  // Returns promises, not values!
+    const result = await transform(item);
+    return result;
+  }); // Crystal clear view of a common mistake melting the logic
+}`
+            },
+            
+            "0-0-1": {
+                lang: "Minified JavaScript",
+                code: `// Void liquifying
+!function(e,t){"use strict";"object"==typeof module&&"object"==typeof module.exports?module.exports=e.document?t(e,!0):function(e){if(!e.document)throw new Error("jQuery requires a window with a document");return t(e)}:t(e)}("undefined"!=typeof window?window:this,function(e,t){var n=[],r=e.document,i=Object.getPrototypeOf,o=n.slice,a=n.concat,s=n.push,u=n.indexOf,l={},c=l.toString,f=l.hasOwnProperty,p=f.toString,d=p.call(Object),h={},g=function e(t){return"function"==typeof t&&"number"!=typeof t.nodeType}...`
+            },
+            
+            "2-2-0": {
+                lang: "SQL (cascading deletes)",
+                code: `-- Functional drowning
+DELETE FROM users WHERE created_at < '2020-01-01';
+-- Looks simple, but triggers cascade through 47 tables
+-- Clear enough to understand, organized enough to track,
+-- but the cascade will bring down production`
+            },
+            
+            "1-1-3": {
+                lang: "Make",
+                code: `# Struggling on bedrock
+%.o: %.c
+\t$(CC) $(CFLAGS) -c $< -o $@
+\t@echo "Building $@"
+
+# Tabs vs spaces will haunt you, but at least Make is eternal`
+            },
+            
+            "3-0-3": {
+                lang: "Prolog (infinite backtracking)",
+                code: `% Perfect vision of perfect chaos
+path(X, Y) :- edge(X, Y).
+path(X, Y) :- edge(X, Z), path(Z, Y).
+edge(a, b). edge(b, c). edge(c, a).
+% Crystal clear infinite loop - see it all, fix nothing`
+            },
+            
+            "0-3-1": {
+                lang: "Monad Transformers",
+                code: `-- Blind perfect cascade
+newtype AppM a = AppM (ReaderT Config (ExceptT Error (StateT AppState IO)) a)
+  deriving (Functor, Applicative, Monad, MonadReader Config, 
+           MonadError Error, MonadState AppState, MonadIO)
+-- Can't see types but feel them dissolving perfectly`
+            },
+            
+            "2-0-3": {
+                lang: "CSS Specificity War",
+                code: `/* Clear chaos crystallized */
+#page .content div.main article > p:first-child::first-letter { color: red !important; }
+body #page .content div.main article p:first-child:first-letter { color: blue !important; }
+html body #page .content div.main article p:first-child::first-letter { color: green !important; }
+/* See every detail of the specificity battle, frozen in time */`
+            },
+            
+            "1-2-1": {
+                lang: "Docker Compose",
+                code: `# Fuzzy flow failing
+version: '3'
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://user:pass@db:5432/app
+  db:
+    image: postgres
+    # Decent structure but env vars might not propagate right`
+            },
+            
+            "3-1-1": {
+                lang: "Template Metaprogramming",
+                code: `// Perfect view of failing tangles
+template<int N>
+struct Factorial {
+    static constexpr int value = N * Factorial<N-1>::value;
+};
+template<>
+struct Factorial<0> {
+    static constexpr int value = 1;
+};
+// See every recursive instantiation as it spirals`
+            },
+            
+            "0-2-2": {
+                lang: "Kubernetes YAML",
+                code: `# Blind competence
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  # Trust the structure, can't see what it does`
+            },
+            
+            "2-3-0": {
+                lang: "GraphQL (circular)",
+                code: `# Clear perfect cascade
+type User {
+  id: ID!
+  posts: [Post!]!
+  friends: [User!]!
+}
+
+type Post {
+  author: User!
+  mentionedUsers: [User!]!
+  relatedPosts: [Post!]!
+}
+# Beautiful structure, infinite query depth = server death`
+            },
+            
+            "1-0-3": {
+                lang: "Assembly",
+                code: `; Glimpsing solid chaos
+mov rax, 0x2000004
+mov rdi, 1
+mov rsi, msg
+mov rdx, 13
+syscall
+; Barely readable but unchanging since 1970s`
+            },
+            
+            "0-3-2": {
+                lang: "Elm",
+                code: `-- Blind flow on ice
+update : Msg -> Model -> (Model, Cmd Msg)
+update msg model =
+  case msg of
+    GotData result ->
+      case result of
+        Ok data -> ({ model | data = data }, Cmd.none)
+        Err _ -> (model, Cmd.none)
+-- Can't see types but feel the flow working... for now`
+            },
+            
+            "3-1-0": {
+                lang: "Spring Annotations",
+                code: `// Perfect view of cascade
+@RestController
+@RequestMapping("/api/v1/users")
+@RequiredArgsConstructor
+@Slf4j
+@Validated
+@CrossOrigin(origins = "*")
+@EnableTransactionManagement
+@EntityScan("com.example.model")
+@EnableJpaRepositories("com.example.repository")
+public class UserController {
+    // See every annotation's effect rippling through system
+}`
+            },
+            
+            "2-1-0": {
+                lang: "Promise chains",
+                code: `// Seeing knots cascade
+fetchUser(id)
+  .then(user => fetchPosts(user.id))
+  .then(posts => Promise.all(posts.map(p => enrichPost(p))))
+  .then(enriched => filterActive(enriched))
+  .catch(err => console.log(err))
+// Clear view of error swallowing everything downstream`
+            },
+            
+            "1-3-3": {
+                lang: "Dhall",
+                code: `-- Squinting at paradise
+let Config = { database : Text, port : Natural, enableSSL : Bool }
+let default = { database = "postgres", port = 5432, enableSSL = True }
+let production = default // { enableSSL = True, port = 443 }
+-- Can barely read but know it's perfect and unbreakable`
+            },
+            
+            "0-1-2": {
+                lang: "Brainfuck",
+                code: `Dark tangles holding
+++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.`
+            },
+            
+            "2-2-3": {
+                lang: "Swift",
+                code: `// Solid competence
+struct User: Codable {
+    let id: UUID
+    let name: String
+    let email: String
+    
+    func validate() -> Result<User, ValidationError> {
+        guard email.contains("@") else {
+            return .failure(.invalidEmail)
+        }
+        return .success(self)
+    }
+}
+// Everything good enough on perfect foundation`
+            },
+            
+            "3-0-2": {
+                lang: "Concurrent HashMap",
+                code: `// Microscopic stable chaos
+map.compute(key, (k, v) -> {
+    if (v == null) {
+        return map.putIfAbsent(k, new Value()); // Race condition!
+    }
+    v.counter.incrementAndGet(); // Another thread might null v
+    return v;
+});
+// See every race condition frozen in crystal clarity`
+            },
+            
+            "0-2-3": {
+                lang: "Makefile (BSD vs GNU)",
+                code: `# Blind but works everywhere
+.PHONY: all clean
+
+SRCS != find . -name "*.c"
+OBJS := \${SRCS:.c=.o}
+
+all: \${OBJS}
+\t\${CC} -o program \${OBJS}
+
+# Trust in 40 years of stability`
+            }
+        };
+        
+        // Generate natural language descriptions for each vertex
+        function getStateDescription(signal, dependencies, error) {
+            const s = signalEmojis[signal];
+            const d = dependencyEmojis[dependencies];
+            const e = errorEmojis[error];
+            
+            // Create a unique phenomenological description for each state
+            const stateKey = `${signal}-${dependencies}-${error}`;
+            const phenomenology = {
+                // Total collapse
+                "0-0-0": {
+                    title: "Absolute Void",
+                    description: "Complete system failure. Like drowning in static during an earthquake while blindfolded. Every thought dissolves before forming, every connection tears before linking. Pure cognitive entropy."
+                },
+                // Signal axis degraded
+                "0-1-0": {
+                    title: "Blind in Tangles", 
+                    description: "Can't see anything but feel the knots everywhere. Like trying to untangle Christmas lights in pitch darkness while wearing oven mitts."
+                },
+                "0-2-0": {
+                    title: "Organized Blindness",
+                    description: "Structure exists but you can't perceive it. Like being in a perfectly organized library with all the lights off - everything's there but unreachable."
+                },
+                "0-3-0": {
+                    title: "Blind Ballet",
+                    description: "Perfect choreography you can't see. Dependencies flow like water but you're groping in darkness. Smooth systematic failure."
+                },
+                // Dependency axis degraded
+                "1-0-0": {
+                    title: "Squinting at Chaos",
+                    description: "Barely making out shapes in a tornado. Every glimpse reveals more chaos. Like reading through fogged glasses during a hurricane."
+                },
+                "2-0-0": {
+                    title: "Clear View of Chaos",
+                    description: "Perfect vision of total systemic failure. Like watching a building collapse in slow motion - every detail crystal clear, nothing you can do."
+                },
+                "3-0-0": {
+                    title: "Microscopic Chaos",
+                    description: "Every chaotic detail in perfect resolution. Like using an electron microscope to watch molecules in Brownian motion - ultimate clarity of ultimate disorder."
+                },
+                // Error axis degraded
+                "0-0-1": {
+                    title: "Dissolving in Darkness",
+                    description: "Can't see, can't connect, structure liquifying. Like being blindfolded on a sinking ship in a whirlpool."
+                },
+                "0-0-2": {
+                    title: "Frozen Void",
+                    description: "Blind, chaotic, but at least stable in its dysfunction. Like being trapped in ice during a blizzard - horrible but solid."
+                },
+                "0-0-3": {
+                    title: "Diamond Prison",
+                    description: "Perfect structure containing perfect darkness and chaos. Like being sealed in a flawless crystal sphere floating in a tornado."
+                },
+                // Mixed states - low overall
+                "1-1-1": {
+                    title: "Struggling System",
+                    description: "Everything degraded but not quite failing. Like trying to read smudged text through dirty glasses while juggling - possible but exhausting."
+                },
+                "0-1-1": {
+                    title: "Dark Tangles Melting",
+                    description: "Can't see, everything's knotted, and it's all dissolving. Like trying to solve a Rubik's cube underwater at night."
+                },
+                "1-0-1": {
+                    title: "Squinting at Liquid Chaos",
+                    description: "Barely seeing chaos that won't hold still. Like watching a lava lamp through frosted glass during an earthquake."
+                },
+                "1-1-0": {
+                    title: "Foggy Knots Drowning",
+                    description: "Degraded vision, tangled connections, cascading errors. Like debugging spaghetti code through tears during a flood."
+                },
+                // Mid-range states
+                "2-2-2": {
+                    title: "Functional Plateau",
+                    description: "Everything works adequately. Like reading a decent book with good lighting in a comfortable chair - nothing spectacular but solidly pleasant."
+                },
+                "1-2-3": {
+                    title: "Squinting at Good Structure",
+                    description: "Vision degraded but dependencies flow well on solid foundation. Like needing glasses but having excellent organizational systems."
+                },
+                "3-1-2": {
+                    title: "Perfect Vision of Tangles",
+                    description: "Can see every knot in excruciating detail on stable ground. Like having x-ray vision of a messy room - clarity makes the chaos worse."
+                },
+                "2-3-1": {
+                    title: "Clear Flows Melting",
+                    description: "Good clarity, perfect flow, but foundation liquifying. Like watching a beautiful ice sculpture melt - exquisite while it lasts."
+                },
+                // High-functioning states
+                "3-2-3": {
+                    title: "Crystalline Complexity",
+                    description: "Perfect clarity navigating intentional complexity on solid foundation. Like a master watchmaker seeing every gear's purpose."
+                },
+                "2-3-3": {
+                    title: "Clear Perfect Flow",
+                    description: "Good vision of dependencies flowing flawlessly on bedrock. Like watching a murmuration of starlings - complex but harmonious."
+                },
+                "3-3-2": {
+                    title: "Transcendent but Fragile",
+                    description: "Perfect clarity and flow on ice. Like performing brain surgery on a frozen lake - exquisite precision, precarious foundation."
+                },
+                // Peak state
+                "3-3-3": {
+                    title: "Absolute Transcendence",
+                    description: "Peak phenomenological state. Every pattern resonates with crystalline clarity. Dependencies flow like music. Foundation unshakeable. Time dilates, understanding arrives before questions form."
+                },
+                // More mixed states with phenomenological richness
+                "2-1-3": {
+                    title: "Clear Knots on Bedrock",
+                    description: "See the tangles clearly, foundation solid. Like untangling jewelry with good light and steady hands - tedious but doable."
+                },
+                "1-3-2": {
+                    title: "Squinting at Perfection",
+                    description: "Perfect flow barely perceived on shaky ground. Like watching ballet through a keyhole during mild tremors."
+                },
+                "3-0-3": {
+                    title: "Perfect Vision of Perfect Chaos",
+                    description: "Ultimate clarity viewing ultimate disorder on unshakeable foundation. Like God watching entropy - omniscient helplessness."
+                },
+                "0-3-3": {
+                    title: "Blind Trust in Perfect System",
+                    description: "Can't see but everything flows perfectly on solid ground. Like being blindfolded on a luxury train - smooth progress into unknown."
+                },
+                "2-2-0": {
+                    title: "Functional Drowning",
+                    description: "Clear enough, organized enough, but errors cascade. Like competently arranging deck chairs on the Titanic."
+                },
+                "1-1-3": {
+                    title: "Struggling on Bedrock",
+                    description: "Poor vision, tangles everywhere, but foundation holds. Like fumbling with keys in dim light - frustrating but you'll get there."
+                },
+                "3-2-1": {
+                    title: "Perfect Sight of Dissolution",
+                    description: "Crystal clarity watching good structure melt. Like HD footage of ice shelves calving - beautiful horror in perfect detail."
+                },
+                "0-2-2": {
+                    title: "Blind but Structured",
+                    description: "Can't see but complexity well-managed on stable base. Like a blind pianist who knows every key by touch."
+                },
+                // Continue with remaining combinations...
+                "2-0-2": {
+                    title: "Watching Stable Chaos",
+                    description: "Clear view of chaos that at least stays put. Like observing a frozen explosion - destructive but static."
+                },
+                "0-1-2": {
+                    title: "Dark Tangles Holding",
+                    description: "Blind in knots but stable. Like being lost in a maze at night, but at least the walls aren't moving."
+                },
+                "1-2-1": {
+                    title: "Fuzzy Flow Failing",
+                    description: "Squinting at decent organization that's starting to fail. Like reading instructions in fading light as rain begins."
+                },
+                "3-1-1": {
+                    title: "Perfect View of Failing Tangles",
+                    description: "See every knot clearly as they pull tighter and structure weakens. Like watching a sweater unravel in slow motion HD."
+                },
+                "2-1-2": {
+                    title: "Clear Tangles Stabilizing",
+                    description: "See the knots clearly, foundation solidifying. Like untangling headphones with good light - annoying but manageable."
+                },
+                "1-3-1": {
+                    title: "Glimpsing Perfect Dissolution",
+                    description: "Barely seeing perfect flow as it melts away. Like watching a sand mandala dissolve through tears."
+                },
+                "0-2-3": {
+                    title: "Blind Competence",
+                    description: "Can't see but muscle memory navigates solid structure perfectly. Like a master chef cooking by smell and touch alone."
+                },
+                "3-0-2": {
+                    title: "Microscopic Stable Chaos",
+                    description: "Every chaotic detail crystal clear, at least it's frozen. Like studying Brownian motion in a gel - random but contained."
+                },
+                "2-3-2": {
+                    title: "Clear Flow on Ice",
+                    description: "Good vision of perfect patterns on fragile foundation. Like figure skating - beautiful but one wrong move means falling."
+                },
+                "1-2-2": {
+                    title: "Functional Fog",
+                    description: "Degraded but everything basically works. Like driving familiar roads in light fog - slow but steady."
+                },
+                "0-3-1": {
+                    title: "Blind Perfect Cascade",
+                    description: "Can't see but feel the perfect flow failing. Like a musician going deaf mid-performance - muscle memory fights inevitable decay."
+                },
+                "3-1-3": {
+                    title: "Perfect Sight of Solid Knots",
+                    description: "See every tangle in perfect detail on unshakeable foundation. Like having X-ray vision of your own broken bones - clarity without relief."
+                },
+                "2-0-3": {
+                    title: "Clear Chaos Crystallized",
+                    description: "Good view of chaos frozen in crystal. Like a photograph of an explosion - destructive power held in perfect stasis."
+                },
+                "1-0-2": {
+                    title: "Squinting at Frozen Chaos",
+                    description: "Barely seeing stable disorder. Like looking at TV static through foggy glasses - doubly unclear but not changing."
+                },
+                "0-1-3": {
+                    title: "Blind in Perfect Knots",
+                    description: "Can't see the tangles but they're solid as rock. Like being trapped in an invisible crystal maze - confusing but unbreakable."
+                },
+                "3-2-2": {
+                    title: "Perfect Complexity Balanced",
+                    description: "Crystal clarity through managed complexity on stable ground. Like a surgeon seeing every vessel while operating - controlled precision."
+                },
+                "2-2-3": {
+                    title: "Solid Competence",
+                    description: "Everything good enough on perfect foundation. Like a well-maintained machine - not cutting-edge but utterly reliable."
+                },
+                "1-3-3": {
+                    title: "Squinting at Paradise",
+                    description: "Perfect flow on perfect foundation, barely perceived. Like glimpsing heaven through a keyhole - tantalizing perfection just out of reach."
+                },
+                "0-0-1": {
+                    title: "Void Liquifying",
+                    description: "Complete darkness, total chaos, starting to melt. Like being in a sensory deprivation tank that's slowly heating up."
+                },
+                "2-1-0": {
+                    title: "Seeing Knots Cascade",
+                    description: "Clear view of tangles pulling everything down. Like watching dominoes fall in slow motion - inevitable systematic collapse."
+                },
+                "3-3-1": {
+                    title: "Perfection Melting",
+                    description: "Absolute clarity and flow starting to liquify. Like the last moments of a perfect dream as you wake - sublime dissolution."
+                },
+                "0-2-1": {
+                    title: "Blind Structure Failing",
+                    description: "Can't see but feel the good organization starting to slip. Like a blind person feeling their familiar furniture being rearranged."
+                },
+                "3-0-0": {
+                    title: "Perfect Sight of Total Chaos",
+                    description: "Ultimate clarity viewing ultimate systemic failure. Like having god's eye view of the heat death of the universe."
+                },
+                "1-1-2": {
+                    title: "Stable Struggle",
+                    description: "Everything difficult but holding steady. Like reading by candlelight during a power outage - not ideal but it works."
+                },
+                "2-3-0": {
+                    title: "Clear Perfect Cascade",
+                    description: "Watching beautiful patterns collapse perfectly. Like observing a championship domino run - mesmerizing destruction."
+                },
+                "1-0-3": {
+                    title: "Glimpsing Solid Chaos",
+                    description: "Barely seeing chaos that's frozen in crystal. Like squinting at a spider preserved in amber - disorder made permanent."
+                },
+                "0-3-2": {
+                    title: "Blind Flow on Ice",
+                    description: "Can't see but feeling perfect patterns on shaky ground. Like ice dancing blindfolded - grace despite precariousness."
+                },
+                "3-1-0": {
+                    title: "Perfect View of Cascade",
+                    description: "Crystal clarity watching knots trigger system collapse. Like time-lapse photography of a building demolition - every detail of destruction visible."
+                },
+                "2-0-1": {
+                    title: "Watching Chaos Melt",
+                    description: "Clear view of disorder becoming liquid. Like watching a Jackson Pollock painting in the rain - chaos becoming more chaotic."
+                },
+                "1-2-0": {
+                    title: "Fuzzy Structure Failing",
+                    description: "Squinting at decent organization as it collapses. Like trying to read a map in wind and rain - was useful, now dissolving."
+                }
+            };
+            
+            const state = phenomenology[stateKey] || {
+                title: "Unnamed State",
+                description: `Signal ${signal}, Dependencies ${dependencies}, Error ${error} - a unique phenomenological combination awaiting exploration.`
+            };
+            
+            return {
+                emoji: `${s}${d}${e}`,
+                title: state.title,
+                description: state.description,
+                code: codeExamples[stateKey]
+            };
+        }
+        
+        // 3D projection
+        function project3D(x, y, z) {
+            const x1 = x * Math.cos(rotationY) - z * Math.sin(rotationY);
+            const y1 = y;
+            const z1 = x * Math.sin(rotationY) + z * Math.cos(rotationY);
+            
+            const x2 = x1;
+            const y2 = y1 * Math.cos(rotationX) - z1 * Math.sin(rotationX);
+            const z2 = y1 * Math.sin(rotationX) + z1 * Math.cos(rotationX);
+            
+            return {
+                x: x2 * scale,
+                y: -y2 * scale,
+                z: z2
+            };
+        }
+        
+        // Surface functions for different phenomenological layers - bounded to cube
+        function primarySurface(signal, dependencies) {
+            // Main phenomenological surface - higher values are better
+            const s = signal / 3;  // Normalize to 0-1
+            const d = dependencies / 3;
+            // Peak at (3,3) = (1,1) normalized
+            const base = 3 * Math.exp(-((1-s) * (1-s) + (1-d) * (1-d)) * 2);
+            const interaction = 0.5 * Math.sin(signal * Math.PI / 3) * Math.cos(dependencies * Math.PI / 3);
+            // Clamp to reasonable bounds
+            return Math.max(-1, Math.min(3, base + interaction));
+        }
+        
+        function errorSurface(signal, dependencies) {
+            // Error cascade surface - shows where things break (low values = bad)
+            const s = signal / 3;
+            const d = dependencies / 3;
+            // Catastrophic when both are low (near 0)
+            if (s < 0.4 && d < 0.4) {
+                return Math.max(-2, -2 * Math.exp((0.4 - s) * (0.4 - d) * 6));
+            }
+            return 0;
+        }
+        
+        function resonanceSurface(signal, dependencies) {
+            // Resonance surface - where imperfect states create surprising harmony
+            if ((signal === 2 && dependencies === 1) || (signal === 1 && dependencies === 2)) {
+                return 1;
+            }
+            if (signal === dependencies && signal > 0 && signal < 3) {
+                return 0.5;
+            }
+            return 0;
+        }
+        
+        // Generate mesh for a surface
+        function generateSurfaceMesh(surfaceFunc, offset = 0) {
+            const points = [];
+            
+            for (let i = 0; i <= gridSize; i++) {
+                points[i] = [];
+                for (let j = 0; j <= gridSize; j++) {
+                    const height = surfaceFunc(i, j) + offset;
+                    points[i][j] = {
+                        x: i,
+                        y: height,
+                        z: j,
+                        projected: project3D(i, height, j)
+                    };
+                }
+            }
+            
+            return points;
+        }
+        
+        // Convert mesh to quads
+        function meshToQuads(mesh) {
+            const quads = [];
+            
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    const p1 = mesh[i][j];
+                    const p2 = mesh[i+1][j];
+                    const p3 = mesh[i+1][j+1];
+                    const p4 = mesh[i][j+1];
+                    
+                    const avgHeight = (p1.y + p2.y + p3.y + p4.y) / 4;
+                    const avgZ = (p1.projected.z + p2.projected.z + p3.projected.z + p4.projected.z) / 4;
+                    
+                    quads.push({
+                        points: [p1, p2, p3, p4],
+                        avgHeight: avgHeight,
+                        avgZ: avgZ
+                    });
+                }
+            }
+            
+            quads.sort((a, b) => a.avgZ - b.avgZ);
+            return quads;
+        }
+        
+        // Color schemes for different surfaces matching VIBES emoji aesthetics
+        const primaryColorScale = d3.scaleSequential()
+            .domain([-2, 5])
+            .interpolator(t => {
+                // Match emoji vibes: 
+                // Green (🔬🎀💠 crystalline) → Yellow (🔍🪢🧊 functional) → Orange (👓🧶💧 degraded) → Red (🙈🌀🌊 catastrophic)
+                if (t < 0.33) {
+                    return d3.interpolateRgb("#10b981", "#84cc16")(t * 3); // Emerald to lime
+                } else if (t < 0.66) {
+                    return d3.interpolateRgb("#84cc16", "#f59e0b")((t - 0.33) * 3); // Lime to amber
+                } else {
+                    return d3.interpolateRgb("#f59e0b", "#dc2626")((t - 0.66) * 3); // Amber to red
+                }
+            });
+        
+        const errorColorScale = d3.scaleSequential()
+            .domain([-3, 0])
+            .interpolator(t => d3.interpolateRgb("#991b1b", "#450a0a")(t)); // Deep reds for catastrophic states
+        
+        const resonanceColorScale = d3.scaleSequential()
+            .domain([0, 2])
+            .interpolator(t => d3.interpolateRgb("#a78bfa", "#6d28d9")(t)); // Violet for unexpected harmonies
+        
+        // Draw all surfaces
+        function drawSurfaces() {
+            // Clear previous
+            g.selectAll('.surface-path').remove();
+            g.selectAll('.vertex-point').remove();
+            g.selectAll('.axis-line').remove();
+            g.selectAll('.axis-label').remove();
+            g.selectAll('.cube-edge').remove();
+            g.selectAll('.reference-point').remove();
+            
+            // Draw cube wireframe first
+            drawCubeWireframe();
+            
+            // Generate meshes for different surfaces
+            const surfaces = [
+                {
+                    mesh: generateSurfaceMesh(primarySurface),
+                    colorScale: primaryColorScale,
+                    opacity: 0.7,
+                    class: 'primary-surface'
+                },
+                {
+                    mesh: generateSurfaceMesh(errorSurface, 3),
+                    colorScale: errorColorScale,
+                    opacity: 0.5,
+                    class: 'error-surface'
+                },
+                {
+                    mesh: generateSurfaceMesh(resonanceSurface, 1),
+                    colorScale: resonanceColorScale,
+                    opacity: 0.4,
+                    class: 'resonance-surface'
+                }
+            ];
+            
+            // Draw each surface with enhanced transparency for layering
+            surfaces.forEach((surface, idx) => {
+                const quads = meshToQuads(surface.mesh);
+                
+                g.selectAll(`.surface-path.${surface.class}`)
+                    .data(quads)
+                    .enter()
+                    .append('path')
+                    .attr('class', `surface-path ${surface.class}`)
+                    .attr('d', d => {
+                        const points = d.points;
+                        return `M ${points[0].projected.x} ${points[0].projected.y} 
+                                L ${points[1].projected.x} ${points[1].projected.y}
+                                L ${points[2].projected.x} ${points[2].projected.y}
+                                L ${points[3].projected.x} ${points[3].projected.y} Z`;
+                    })
+                    .attr('fill', d => surface.colorScale(d.avgHeight))
+                    .attr('fill-opacity', surface.opacity)
+                    .attr('stroke', d => {
+                        // Highlight discontinuities with darker strokes
+                        const heightVariance = Math.abs(d.points[0].y - d.points[2].y);
+                        return heightVariance > 1 ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)';
+                    })
+                    .attr('stroke-width', d => {
+                        const heightVariance = Math.abs(d.points[0].y - d.points[2].y);
+                        return heightVariance > 1 ? 1 : 0.5;
+                    });
+            });
+            
+            drawVertices();
+            drawAxes();
+        }
+        
+        function drawCubeWireframe() {
+            // Simple cube wireframe from 0-3 on each axis
+            // Draw the 12 edges of the cube
+            const cubeEdges = [
+                // Bottom face (y=low)
+                [{x:0,y:-1,z:0}, {x:3,y:-1,z:0}],
+                [{x:3,y:-1,z:0}, {x:3,y:-1,z:3}],
+                [{x:3,y:-1,z:3}, {x:0,y:-1,z:3}],
+                [{x:0,y:-1,z:3}, {x:0,y:-1,z:0}],
+                // Top face (y=high)
+                [{x:0,y:4,z:0}, {x:3,y:4,z:0}],
+                [{x:3,y:4,z:0}, {x:3,y:4,z:3}],
+                [{x:3,y:4,z:3}, {x:0,y:4,z:3}],
+                [{x:0,y:4,z:3}, {x:0,y:4,z:0}],
+                // Vertical edges
+                [{x:0,y:-1,z:0}, {x:0,y:4,z:0}],
+                [{x:3,y:-1,z:0}, {x:3,y:4,z:0}],
+                [{x:3,y:-1,z:3}, {x:3,y:4,z:3}],
+                [{x:0,y:-1,z:3}, {x:0,y:4,z:3}]
+            ];
+            
+            // Draw edges
+            cubeEdges.forEach(edge => {
+                const p1 = project3D(edge[0].x, edge[0].y, edge[0].z);
+                const p2 = project3D(edge[1].x, edge[1].y, edge[1].z);
+                
+                g.append('line')
+                    .attr('class', 'cube-edge')
+                    .attr('x1', p1.x)
+                    .attr('y1', p1.y)
+                    .attr('x2', p2.x)
+                    .attr('y2', p2.y)
+                    .attr('stroke', '#444')
+                    .attr('stroke-width', 3)
+                    .attr('stroke-opacity', 0.7)
+                    .attr('stroke-dasharray', '10,5');
+            });
+            
+            // Draw corner points for clarity
+            const corners = [
+                {x:0,y:0,z:0}, {x:3,y:0,z:0}, {x:3,y:0,z:3}, {x:0,y:0,z:3}
+            ];
+            
+            corners.forEach(corner => {
+                const p = project3D(corner.x, primarySurface(corner.x, corner.z), corner.z);
+                g.append('circle')
+                    .attr('class', 'cube-corner')
+                    .attr('cx', p.x)
+                    .attr('cy', p.y)
+                    .attr('r', 5)
+                    .attr('fill', '#444')
+                    .attr('stroke', '#fff')
+                    .attr('stroke-width', 2);
+            });
+        }
+        
+        function drawVertices() {
+            const vertices = [];
+            
+            // Generate all vertex points
+            for (let signal = 0; signal <= gridSize; signal++) {
+                for (let dependencies = 0; dependencies <= gridSize; dependencies++) {
+                    // Use primary surface height for vertex placement
+                    const height = primarySurface(signal, dependencies);
+                    const projected = project3D(signal, height, dependencies);
+                    
+                    // Generate vertices for each error state at this signal/dependency combination
+                    for (let error = 0; error <= gridSize; error++) {
+                        const errorOffset = error * 0.5; // Slight vertical offset for error states
+                        const adjustedHeight = height - errorOffset;
+                        const projectedWithError = project3D(signal, adjustedHeight, dependencies);
+                        
+                        vertices.push({
+                            signal: signal,
+                            dependencies: dependencies,
+                            error: error,
+                            height: adjustedHeight,
+                            projected: projectedWithError,
+                            description: getStateDescription(signal, dependencies, error)
+                        });
+                    }
+                }
+            }
+            
+            // Sort by depth
+            vertices.sort((a, b) => a.projected.z - b.projected.z);
+            
+            // Draw vertices
+            g.selectAll('.vertex-point')
+                .data(vertices)
+                .enter()
+                .append('circle')
+                .attr('class', 'vertex-point')
+                .attr('cx', d => d.projected.x)
+                .attr('cy', d => d.projected.y)
+                .attr('r', 4)
+                .attr('fill', d => {
+                    // Color based on overall VIBES state quality
+                    const totalScore = (d.signal + d.dependencies + d.error) / 9; // Normalize to 0-1
+                    if (totalScore > 0.8) return '#10b981'; // Emerald - transcendent
+                    if (totalScore > 0.65) return '#84cc16'; // Lime - good
+                    if (totalScore > 0.5) return '#fbbf24'; // Amber - functional
+                    if (totalScore > 0.35) return '#f59e0b'; // Orange - degraded
+                    if (totalScore > 0.2) return '#ef4444'; // Red - struggling
+                    return '#991b1b'; // Dark red - catastrophic
+                })
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 2)
+                .on('click', function(event, d) {
+                    showStateDescription(d);
+                    // Update dropdowns
+                    d3.select('#signal-select').property('value', d.signal);
+                    d3.select('#dependency-select').property('value', d.dependencies);
+                    d3.select('#error-select').property('value', d.error);
+                    updateSelectedState();
+                })
+                .on('mouseover', function(event, d) {
+                    d3.select(this).attr('r', 6);
+                })
+                .on('mouseout', function(event, d) {
+                    d3.select(this).attr('r', 4);
+                });
+        }
+        
+        function drawAxes() {
+            // Axis lines
+            const axes = [
+                {start: project3D(0, -1, 0), end: project3D(0, 5, 0)}, // Y
+                {start: project3D(-0.5, 0, 0), end: project3D(3.5, 0, 0)}, // X
+                {start: project3D(0, 0, -0.5), end: project3D(0, 0, 3.5)} // Z
+            ];
+            
+            axes.forEach(axis => {
+                g.append('line')
+                    .attr('class', 'axis-line')
+                    .attr('x1', axis.start.x)
+                    .attr('y1', axis.start.y)
+                    .attr('x2', axis.end.x)
+                    .attr('y2', axis.end.y);
+            });
+        }
+        
+        function showStateDescription(vertex) {
+            const desc = vertex.description;
+            const descDiv = d3.select('#state-description');
+            
+            // Get all three emoji for complete state
+            const signalEmoji = signalEmojis[vertex.signal];
+            const depEmoji = dependencyEmojis[vertex.dependencies];
+            const errorEmoji = errorEmojis[vertex.error];
+            const fullEmoji = `${signalEmoji}${depEmoji}${errorEmoji}`;
+            
+            let html = `
+                <h3><span class="emoji-large">${fullEmoji}</span> ${desc.title}</h3>
+                <p><strong>Coordinates:</strong> Signal=${vertex.signal} (${signalEmoji}), Dependencies=${vertex.dependencies} (${depEmoji}), Error=${vertex.error} (${errorEmoji})</p>
+                <p>${desc.description}</p>
+            `;
+            
+            if (desc.code) {
+                html += `
+                    <div style="margin-top: 15px;">
+                        <strong>What this feels like in code:</strong>
+                        <div class="code-example">
+                            <div class="code-lang">${desc.code.lang}</div>
+${desc.code.code}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += `
+                <p style="margin-top: 10px; font-size: 12px; color: #666;">
+                    Height represents phenomenological intensity - how "alive" this state feels.
+                </p>
+            `;
+            
+            descDiv.html(html);
+            
+            // Add a subtle animation
+            descDiv.style('transform', 'scale(0.95)')
+                .transition()
+                .duration(200)
+                .style('transform', 'scale(1)');
+        }
+        
+        function drawCoordinateGuides(signal, dependencies, error) {
+            // Remove previous guides
+            g.selectAll('.coord-guide').remove();
+            
+            // Draw vertical guide lines from base to selected point
+            const errorOffset = error * 0.5;
+            const height = primarySurface(signal, dependencies) - errorOffset;
+            
+            // Vertical line from bottom
+            const bottomPoint = project3D(signal, -1, dependencies);
+            const topPoint = project3D(signal, height, dependencies);
+            
+            g.append('line')
+                .attr('class', 'coord-guide')
+                .attr('x1', bottomPoint.x)
+                .attr('y1', bottomPoint.y)
+                .attr('x2', topPoint.x)
+                .attr('y2', topPoint.y)
+                .attr('stroke', '#ff0066')
+                .attr('stroke-width', 3)
+                .attr('stroke-opacity', 0.6)
+                .attr('stroke-dasharray', '5,5');
+            
+            // Grid lines on base plane
+            // Signal line
+            for(let z = 0; z <= 3; z += 0.5) {
+                const p1 = project3D(signal, -1, z);
+                const alpha = Math.abs(z - dependencies) < 0.1 ? 1 : 0.3;
+                g.append('line')
+                    .attr('class', 'coord-guide')
+                    .attr('x1', p1.x - 10)
+                    .attr('y1', p1.y)
+                    .attr('x2', p1.x + 10)
+                    .attr('y2', p1.y)
+                    .attr('stroke', '#ff0066')
+                    .attr('stroke-width', 2)
+                    .attr('stroke-opacity', alpha);
+            }
+            
+            // Dependencies line
+            for(let x = 0; x <= 3; x += 0.5) {
+                const p1 = project3D(x, -1, dependencies);
+                const alpha = Math.abs(x - signal) < 0.1 ? 1 : 0.3;
+                g.append('line')
+                    .attr('class', 'coord-guide')
+                    .attr('x1', p1.x - 10)
+                    .attr('y1', p1.y)
+                    .attr('x2', p1.x + 10)
+                    .attr('y2', p1.y)
+                    .attr('stroke', '#ff0066')
+                    .attr('stroke-width', 2)
+                    .attr('stroke-opacity', alpha);
+            }
+            
+            // Draw coordinate planes intersection
+            const planePoints = [
+                project3D(0, height, dependencies),
+                project3D(3, height, dependencies),
+                project3D(signal, height, 0),
+                project3D(signal, height, 3)
+            ];
+            
+            g.append('line')
+                .attr('class', 'coord-guide')
+                .attr('x1', planePoints[0].x)
+                .attr('y1', planePoints[0].y)
+                .attr('x2', planePoints[1].x)
+                .attr('y2', planePoints[1].y)
+                .attr('stroke', '#ff0066')
+                .attr('stroke-width', 2)
+                .attr('stroke-opacity', 0.4)
+                .attr('stroke-dasharray', '3,3');
+                
+            g.append('line')
+                .attr('class', 'coord-guide')
+                .attr('x1', planePoints[2].x)
+                .attr('y1', planePoints[2].y)
+                .attr('x2', planePoints[3].x)
+                .attr('y2', planePoints[3].y)
+                .attr('stroke', '#ff0066')
+                .attr('stroke-width', 2)
+                .attr('stroke-opacity', 0.4)
+                .attr('stroke-dasharray', '3,3');
+        }
+        
+        function updateSelectedState() {
+            // Check if DOM elements exist before trying to access them
+            const signalSelect = d3.select('#signal-select');
+            const dependencySelect = d3.select('#dependency-select');
+            const errorSelect = d3.select('#error-select');
+            
+            if (signalSelect.empty() || dependencySelect.empty() || errorSelect.empty()) {
+                // DOM not ready yet, skip update
+                return;
+            }
+            
+            const signal = parseInt(signalSelect.property('value'));
+            const dependencies = parseInt(dependencySelect.property('value'));
+            const error = parseInt(errorSelect.property('value'));
+            
+            // Calculate position for selected point
+            const errorOffset = error * 0.5;
+            const height = primarySurface(signal, dependencies) - errorOffset;
+            const projected = project3D(signal, height, dependencies);
+            
+            // Remove old indicator
+            g.selectAll('#selected-indicator').remove();
+            g.selectAll('#coordinate-label').remove();
+            
+            // Add new indicator
+            g.append('circle')
+                .attr('id', 'selected-indicator')
+                .attr('cx', projected.x)
+                .attr('cy', projected.y)
+                .attr('r', 8)
+                .attr('fill', 'none')
+                .attr('stroke', '#ff0066')
+                .attr('stroke-width', 3)
+                .attr('stroke-dasharray', '5,5');
+            
+            // Add coordinate label
+            const labelGroup = g.append('g')
+                .attr('id', 'coordinate-label')
+                .attr('transform', `translate(${projected.x}, ${projected.y - 25})`);
+                
+            labelGroup.append('rect')
+                .attr('rx', 4)
+                .attr('ry', 4)
+                .attr('fill', 'white')
+                .attr('stroke', '#ff0066')
+                .attr('stroke-width', 1);
+                
+            labelGroup.append('text')
+                .attr('text-anchor', 'middle')
+                .attr('dy', 0)
+                .style('font-size', '14px')
+                .style('font-weight', 'bold')
+                .style('fill', '#ff0066')
+                .text(`(${signal}, ${dependencies}, ${error})`);
+            
+            // Draw coordinate guide lines
+            drawCoordinateGuides(signal, dependencies, error);
+            
+            // Update background rect after positioning
+            setTimeout(() => {
+                const textNode = labelGroup.select('text').node();
+                if (textNode) {
+                    const bbox = textNode.getBBox();
+                    labelGroup.select('rect')
+                        .attr('x', bbox.x - 8)
+                        .attr('y', bbox.y - 4)
+                        .attr('width', bbox.width + 16)
+                        .attr('height', bbox.height + 8);
+                }
+            }, 50);
+            
+            // Update the description
+            const description = getStateDescription(signal, dependencies, error);
+            const signalEmoji = signalEmojis[signal];
+            const depEmoji = dependencyEmojis[dependencies];
+            const errorEmoji = errorEmojis[error];
+            const fullEmoji = `${signalEmoji}${depEmoji}${errorEmoji}`;
+            
+            let html = `
+                <h3 style="margin-top: 0;"><span class="emoji-large">${fullEmoji}</span> ${description.title}</h3>
+                <p><strong>State:</strong> (${signal}, ${dependencies}, ${error})</p>
+                <p>${description.description}</p>
+            `;
+            
+            if (description.code) {
+                html += `
+                    <div style="margin-top: 15px;">
+                        <strong>What this feels like in code:</strong>
+                        <div class="code-example">
+                            <div class="code-lang">${description.code.lang}</div>
+${description.code.code}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += `
+                <p style="margin-top: 10px; font-size: 12px; color: #666;">
+                    Position shows phenomenological intensity - height indicates how cognitively "alive" this state feels.
+                    ${height > 2 ? "This is a high-energy state." : height < -1 ? "This is a low-energy, difficult state." : "This is a moderate state."}
+                </p>
+            `;
+            
+            d3.select('#state-details').html(html);
+        }
+        
+        // Set up event listeners for coordinate selectors
+        d3.select('#signal-select').on('change', updateSelectedState);
+        d3.select('#dependency-select').on('change', updateSelectedState);
+        d3.select('#error-select').on('change', updateSelectedState);
+        
+        // Initial draw
+        drawSurfaces();
+        
+        // Initialize with (3,3,3) - transcendent state
+        updateSelectedState();
+        
+        } catch (error) {
+            console.error('Visualization error:', error);
+        }
+    </script>
+</body>
+</html>
