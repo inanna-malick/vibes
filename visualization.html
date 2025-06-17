@@ -1748,8 +1748,9 @@ all: \${OBJS}
             const yAxisX = -300; // Fixed screen X position, far left of visualization
             
             for (let i = 0; i < 4; i++) {
-                const segStartY = project3D(0, -1 + (Math.max(-0.5, i - 0.5) * 4/3), 0).y;
-                const segEndY = project3D(0, -1 + (Math.min(3.5, i + 0.5) * 4/3), 0).y;
+                // Use fixed screen coordinates for vertical Y-axis
+                const segStartY = -200 + (Math.max(-0.5, i - 0.5) * 100); // bottom to top
+                const segEndY = -200 + (Math.min(3.5, i + 0.5) * 100);
                 
                 // Draw main segment
                 yAxisGroup.append('line')
@@ -1795,8 +1796,8 @@ all: \${OBJS}
                         updateAxisValue('error', value);
                     });
                 
-                // Position tick marks
-                const tickY = project3D(0, -1 + (i * 4/3), 0).y;
+                // Position tick marks using screen coordinates
+                const tickY = -200 + (i * 100); // evenly spaced vertically
                 g.append('line')
                     .attr('class', 'axis-tick')
                     .attr('x1', yAxisX - 8)
@@ -1818,9 +1819,9 @@ all: \${OBJS}
                     .text(i);
             }
             
-            // Y axis emoji endpoints
-            const yStartY = project3D(0, -1, 0).y;
-            const yEndY = project3D(0, 3, 0).y;
+            // Y axis emoji endpoints using screen coordinates
+            const yStartY = 250;  // bottom
+            const yEndY = -250;   // top
             g.append('text')
                 .attr('class', 'axis-emoji')
                 .attr('x', yAxisX - 30)
