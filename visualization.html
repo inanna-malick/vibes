@@ -99,10 +99,16 @@
             font-size: 24px;
         }
         
-        .axis-line {
-            stroke: #666;
-            stroke-width: 2;
-            fill: none;
+        .axis-rail {
+            transition: all 0.2s ease;
+        }
+        
+        .axis-rail:hover {
+            filter: brightness(1.2) drop-shadow(0 0 10px rgba(68, 136, 255, 0.5));
+        }
+        
+        .axis-orb {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .axis-label {
@@ -280,15 +286,39 @@
         </p>
     </div>
     
-    <div class="state-card" id="state-card" style="position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.95); padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); max-width: 350px;">
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <span id="state-emoji" style="font-size: 48px;">🔬🎀💠</span>
-            <div>
-                <h3 id="state-title" style="margin: 0; font-size: 18px;">Absolute Transcendence</h3>
-                <p id="state-coords" style="margin: 0; font-size: 14px; color: #666;">Signal: 3, Dependencies: 3, Error: 3</p>
-            </div>
+    <div class="state-card" id="state-card" style="position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.95); padding: 24px; border-radius: 16px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05); max-width: 380px; backdrop-filter: blur(10px);">
+        <div style="text-align: center; margin-bottom: 16px;">
+            <span id="state-emoji" style="font-size: 64px; filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1));">🔬🎀💠</span>
         </div>
-        <p id="state-description" style="margin-top: 10px; font-size: 14px;">Peak phenomenological state. Every pattern resonates with crystalline clarity.</p>
+        <div style="text-align: center;">
+            <h3 id="state-title" style="margin: 0 0 4px 0; font-size: 20px; font-weight: 600;">Absolute Transcendence</h3>
+            <p id="state-coords" style="margin: 0 0 12px 0; font-size: 13px; color: #666; font-family: 'SF Mono', monospace;">Signal: 3, Dependencies: 3, Error: 3</p>
+        </div>
+        <p id="state-description" style="margin: 0; font-size: 14px; line-height: 1.5; color: #333;">Peak phenomenological state. Every pattern resonates with crystalline clarity.</p>
+        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #eee;">
+            <button onclick="showCodeExample()" style="width: 100%; padding: 8px 16px; background: #4488ff; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500;">
+                View Code Example →
+            </button>
+        </div>
+    </div>
+    
+    <div class="preset-buttons" style="position: absolute; bottom: 20px; left: 20px; display: flex; gap: 8px;">
+        <button onclick="updateAxisValue('signal', 3); updateAxisValue('dependencies', 3); updateAxisValue('error', 3);" 
+                style="padding: 8px 12px; background: rgba(255, 255, 255, 0.9); border: 1px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 13px;">
+            🎯 Peak
+        </button>
+        <button onclick="updateAxisValue('signal', 0); updateAxisValue('dependencies', 0); updateAxisValue('error', 0);" 
+                style="padding: 8px 12px; background: rgba(255, 255, 255, 0.9); border: 1px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 13px;">
+            💀 Chaos
+        </button>
+        <button onclick="updateAxisValue('signal', 2); updateAxisValue('dependencies', 2); updateAxisValue('error', 2);" 
+                style="padding: 8px 12px; background: rgba(255, 255, 255, 0.9); border: 1px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 13px;">
+            ⚖️ Balance
+        </button>
+        <button onclick="updateAxisValue('signal', 2); updateAxisValue('dependencies', 1); updateAxisValue('error', 2);" 
+                style="padding: 8px 12px; background: rgba(255, 255, 255, 0.9); border: 1px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 13px;">
+            ✨ Sweet
+        </button>
     </div>
     
     <div class="legend" style="font-family: 'SF Mono', 'Consolas', monospace; font-size: 12px; white-space: pre;">
@@ -1256,7 +1286,61 @@ all: \${OBJS}
             
             // drawVertices(); // Removed - no more dots
             drawAxes();
+            drawProjections();
             // drawSurfaceLabels(); // Removed - too cluttered
+        }
+        
+        function drawProjections() {
+            // Remove old projections
+            g.selectAll('.projection-line').remove();
+            g.selectAll('.intersection-point').remove();
+            
+            // Calculate intersection point
+            const yValue = -1 + (currentState.error * 4/3);
+            const intersectionPoint = project3D(currentState.signal, yValue, currentState.dependencies);
+            
+            // Draw projection lines
+            const projections = [
+                // To X axis
+                {
+                    from: intersectionPoint,
+                    to: project3D(currentState.signal, 0, 0)
+                },
+                // To Y axis
+                {
+                    from: intersectionPoint,
+                    to: project3D(0, yValue, 0)
+                },
+                // To Z axis
+                {
+                    from: intersectionPoint,
+                    to: project3D(0, 0, currentState.dependencies)
+                }
+            ];
+            
+            projections.forEach(proj => {
+                g.append('line')
+                    .attr('class', 'projection-line')
+                    .attr('x1', proj.from.x)
+                    .attr('y1', proj.from.y)
+                    .attr('x2', proj.to.x)
+                    .attr('y2', proj.to.y)
+                    .attr('stroke', '#4488ff')
+                    .attr('stroke-width', 1)
+                    .attr('stroke-dasharray', '5,5')
+                    .attr('opacity', 0.5);
+            });
+            
+            // Draw intersection point
+            g.append('circle')
+                .attr('class', 'intersection-point')
+                .attr('cx', intersectionPoint.x)
+                .attr('cy', intersectionPoint.y)
+                .attr('r', 8)
+                .attr('fill', '#4488ff')
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 2)
+                .style('filter', 'drop-shadow(0 0 20px #4488ff)');
         }
         
         function drawSurfaceLabels() {
@@ -1519,14 +1603,157 @@ all: \${OBJS}
                 .attr('stroke-width', 3)
                 .style('filter', 'drop-shadow(0 0 10px #4488ff)');
             
-            // Similar for Z-axis (Dependencies) and Y-axis (Error)
-            // Z-axis implementation...
+            // Z-axis (Dependencies)
             const zStart = project3D(0, 0, -0.5);
             const zEnd = project3D(0, 0, 3.5);
             
-            // Y-axis implementation...
+            // Create gradient for Z axis
+            const zGradient = defs.append('linearGradient')
+                .attr('id', 'z-axis-gradient')
+                .attr('x1', '0%').attr('y1', '0%')
+                .attr('x2', '100%').attr('y2', '100%');
+            zGradient.append('stop').attr('offset', '0%').attr('stop-color', '#ef4444');
+            zGradient.append('stop').attr('offset', '100%').attr('stop-color', '#10b981');
+            
+            // Draw thick Z axis rail
+            g.append('line')
+                .attr('class', 'axis-rail z-axis')
+                .attr('x1', zStart.x)
+                .attr('y1', zStart.y)
+                .attr('x2', zEnd.x)
+                .attr('y2', zEnd.y)
+                .attr('stroke', 'url(#z-axis-gradient)')
+                .attr('stroke-width', 20)
+                .attr('stroke-linecap', 'round')
+                .style('cursor', 'pointer')
+                .on('click', function(event) {
+                    const [mouseX, mouseY] = d3.pointer(event, this);
+                    // Calculate position along diagonal line
+                    const dx = mouseX - zStart.x;
+                    const dy = mouseY - zStart.y;
+                    const lineLen = Math.sqrt(Math.pow(zEnd.x - zStart.x, 2) + Math.pow(zEnd.y - zStart.y, 2));
+                    const t = (dx * (zEnd.x - zStart.x) + dy * (zEnd.y - zStart.y)) / (lineLen * lineLen);
+                    const value = Math.round(Math.max(0, Math.min(3, t * 3)));
+                    updateAxisValue('dependencies', value);
+                });
+            
+            // Z axis emoji endpoints
+            g.append('text')
+                .attr('class', 'axis-emoji')
+                .attr('x', zStart.x - 15)
+                .attr('y', zStart.y - 10)
+                .attr('text-anchor', 'end')
+                .style('font-size', '24px')
+                .text('🌀');
+            
+            g.append('text')
+                .attr('class', 'axis-emoji')
+                .attr('x', zEnd.x + 15)
+                .attr('y', zEnd.y + 10)
+                .attr('text-anchor', 'start')
+                .style('font-size', '24px')
+                .text('🎀');
+            
+            // Z axis ticks
+            for (let i = 0; i <= 3; i++) {
+                const tickPos = project3D(0, 0, i);
+                const perpX = 5;
+                const perpY = -5;
+                g.append('line')
+                    .attr('class', 'axis-tick')
+                    .attr('x1', tickPos.x - perpX)
+                    .attr('y1', tickPos.y - perpY)
+                    .attr('x2', tickPos.x + perpX)
+                    .attr('y2', tickPos.y + perpY)
+                    .attr('stroke', '#666')
+                    .attr('stroke-width', 2);
+            }
+            
+            // Z axis current position orb
+            const zOrbPos = project3D(0, 0, currentDeps);
+            g.append('circle')
+                .attr('class', 'axis-orb z-orb')
+                .attr('cx', zOrbPos.x)
+                .attr('cy', zOrbPos.y)
+                .attr('r', 12)
+                .attr('fill', '#4488ff')
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 3)
+                .style('filter', 'drop-shadow(0 0 10px #4488ff)');
+            
+            // Y-axis (Error Surface)
             const yStart = project3D(0, -1, 0);
             const yEnd = project3D(0, 3, 0);
+            
+            // Create gradient for Y axis
+            const yGradient = defs.append('linearGradient')
+                .attr('id', 'y-axis-gradient')
+                .attr('x1', '0%').attr('y1', '100%')
+                .attr('x2', '0%').attr('y2', '0%');
+            yGradient.append('stop').attr('offset', '0%').attr('stop-color', '#ef4444');
+            yGradient.append('stop').attr('offset', '100%').attr('stop-color', '#10b981');
+            
+            // Draw thick Y axis rail
+            g.append('line')
+                .attr('class', 'axis-rail y-axis')
+                .attr('x1', yStart.x)
+                .attr('y1', yStart.y)
+                .attr('x2', yEnd.x)
+                .attr('y2', yEnd.y)
+                .attr('stroke', 'url(#y-axis-gradient)')
+                .attr('stroke-width', 20)
+                .attr('stroke-linecap', 'round')
+                .style('cursor', 'pointer')
+                .on('click', function(event) {
+                    const [mouseX, mouseY] = d3.pointer(event, this);
+                    const t = 1 - ((mouseY - yEnd.y) / (yStart.y - yEnd.y));
+                    const value = Math.round(Math.max(0, Math.min(3, t * 3)));
+                    updateAxisValue('error', value);
+                });
+            
+            // Y axis emoji endpoints
+            g.append('text')
+                .attr('class', 'axis-emoji')
+                .attr('x', yStart.x - 30)
+                .attr('y', yStart.y + 5)
+                .attr('text-anchor', 'middle')
+                .style('font-size', '24px')
+                .text('🌊');
+            
+            g.append('text')
+                .attr('class', 'axis-emoji')
+                .attr('x', yEnd.x - 30)
+                .attr('y', yEnd.y + 5)
+                .attr('text-anchor', 'middle')
+                .style('font-size', '24px')
+                .text('💠');
+            
+            // Y axis ticks
+            for (let i = 0; i <= 3; i++) {
+                const tickY = -1 + (i * 4/3);
+                const tickPos = project3D(0, tickY, 0);
+                g.append('line')
+                    .attr('class', 'axis-tick')
+                    .attr('x1', tickPos.x - 5)
+                    .attr('y1', tickPos.y)
+                    .attr('x2', tickPos.x + 5)
+                    .attr('y2', tickPos.y)
+                    .attr('stroke', '#666')
+                    .attr('stroke-width', 2);
+            }
+            
+            // Y axis current position orb
+            const yValue = -1 + (currentError * 4/3);
+            const yOrbPos = project3D(0, yValue, 0);
+            g.append('circle')
+                .attr('class', 'axis-orb y-orb')
+                .attr('cx', yOrbPos.x)
+                .attr('cy', yOrbPos.y)
+                .attr('r', 12)
+                .attr('fill', '#4488ff')
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 3)
+                .style('filter', 'drop-shadow(0 0 10px #4488ff)');
         }
         
         function showStateDescription(vertex) {
@@ -1776,6 +2003,7 @@ ${description.code.code}
             
             updateStateDisplay();
             drawAxes(); // Redraw axes to update orb positions
+            drawProjections(); // Update projection lines
         }
         
         // Update state display
@@ -1787,6 +2015,64 @@ ${description.code.code}
             d3.select('#state-coords').text(`Signal: ${currentState.signal}, Dependencies: ${currentState.dependencies}, Error: ${currentState.error}`);
             d3.select('#state-description').text(desc.description);
         }
+        
+        // Show code example function
+        window.showCodeExample = function() {
+            const desc = getStateDescription(currentState.signal, currentState.dependencies, currentState.error);
+            if (!desc.code) {
+                alert('No code example available for this state.');
+                return;
+            }
+            
+            // Create modal overlay
+            const modal = d3.select('body').append('div')
+                .style('position', 'fixed')
+                .style('top', '0')
+                .style('left', '0')
+                .style('width', '100%')
+                .style('height', '100%')
+                .style('background', 'rgba(0, 0, 0, 0.8)')
+                .style('display', 'flex')
+                .style('align-items', 'center')
+                .style('justify-content', 'center')
+                .style('z-index', '1000')
+                .on('click', function() { modal.remove(); });
+            
+            // Create modal content
+            const content = modal.append('div')
+                .style('background', '#1e1e1e')
+                .style('border-radius', '12px')
+                .style('padding', '24px')
+                .style('max-width', '800px')
+                .style('max-height', '80vh')
+                .style('overflow', 'auto')
+                .style('box-shadow', '0 20px 60px rgba(0, 0, 0, 0.5)')
+                .on('click', function() { d3.event.stopPropagation(); });
+            
+            // Add header
+            content.append('div')
+                .style('display', 'flex')
+                .style('justify-content', 'space-between')
+                .style('align-items', 'center')
+                .style('margin-bottom', '16px')
+                .html(`
+                    <div style="color: #e0e0e0;">
+                        <h3 style="margin: 0; font-size: 18px;">${desc.emoji} ${desc.title}</h3>
+                        <p style="margin: 4px 0 0 0; font-size: 14px; color: #999;">What this state feels like in code:</p>
+                    </div>
+                    <button onclick="this.closest('div').parentElement.parentElement.remove()" 
+                            style="background: none; border: none; color: #999; font-size: 24px; cursor: pointer;">×</button>
+                `);
+            
+            // Add code
+            content.append('div')
+                .attr('class', 'code-example')
+                .style('margin', '0')
+                .html(`
+                    <div class="code-lang">${desc.code.lang}</div>
+                    <pre style="margin: 0; color: #d4d4d4;">${desc.code.code}</pre>
+                `);
+        };
         
         // Fixed view - no reset needed
         
