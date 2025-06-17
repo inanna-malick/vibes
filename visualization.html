@@ -16,6 +16,47 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
+            position: relative;
+        }
+        
+        /* Subtle vignette and film effects */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.03) 100%),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.005) 2px,
+                    rgba(0, 0, 0, 0.005) 4px
+                );
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        /* Subtle scan-line effect */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(68, 136, 255, 0.1), transparent);
+            animation: scan-line 8s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 15;
+        }
+        
+        @keyframes scan-line {
+            0%, 100% { transform: translateY(0); opacity: 0; }
+            50% { transform: translateY(100vh); opacity: 1; }
         }
         
         svg {
@@ -232,6 +273,27 @@
         
         .axis-orb-current {
             animation: pulse-glow 2s ease-in-out infinite;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Micro-animations for state changes */
+        .state-card {
+            animation: subtle-pulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes subtle-pulse {
+            0%, 100% { transform: translateY(-2px) scale(1.0); }
+            50% { transform: translateY(-3px) scale(1.001); }
+        }
+        
+        /* Enhanced transitions for all interactive elements */
+        .axis-segment, .axis-tick, .projection-line, .intersection-point {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Performance optimizations */
+        .surface-path, .cube-edge {
+            will-change: transform, opacity;
         }
         
         .axis-label {
@@ -417,6 +479,46 @@
         }
         
         @media (max-width: 480px) {
+            /* Disable performance-heavy effects on mobile */
+            body::before, body::after {
+                display: none;
+            }
+            
+            .surface-path {
+                filter: none !important;
+                animation: none !important;
+            }
+            
+            .state-card {
+                animation: none;
+                backdrop-filter: blur(5px);
+            }
+            
+            .axis-orb-current {
+                animation: none;
+            }
+            
+            /* Increased touch targets */
+            .axis-segment {
+                stroke-width: 30 !important;
+            }
+            
+            .preset-btn {
+                padding: 16px 20px !important;
+                font-size: 16px !important;
+            }
+            
+            /* Higher contrast for outdoor viewing */
+            .axis-tick {
+                stroke-width: 6 !important;
+            }
+            
+            .cube-edge {
+                stroke-opacity: 0.8 !important;
+                stroke-width: 3 !important;
+            }
+            
+            /* Simplified typography */
             .info-panel h2 {
                 font-size: 20px;
             }
@@ -2581,6 +2683,30 @@ ${description.code.code}
         
         // Initialize preset buttons
         updatePresetButtons();
+        
+        // Subtle parallax effect on mouse movement
+        let parallaxEnabled = true;
+        document.addEventListener('mousemove', function(e) {
+            if (!parallaxEnabled) return;
+            
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            const deltaX = (e.clientX - centerX) / centerX;
+            const deltaY = (e.clientY - centerY) / centerY;
+            
+            // Subtle shift for surfaces (very minimal)
+            d3.selectAll('.surface-path')
+                .style('transform', `translate(${deltaX * 0.5}px, ${deltaY * 0.5}px)`);
+            
+            // Slightly more movement for UI elements
+            d3.selectAll('.state-card, .info-panel, .legend')
+                .style('transform', `translate(${deltaX * 1}px, ${deltaY * 1}px)`);
+        });
+        
+        // Disable parallax on small screens for performance
+        if (window.innerWidth < 768) {
+            parallaxEnabled = false;
+        }
         
         } catch (error) {
             console.error('Visualization error:', error);
