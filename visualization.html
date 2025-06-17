@@ -23,9 +23,38 @@
         }
         
         .surface-path {
-            stroke: rgba(0, 0, 0, 0.2);
+            stroke: rgba(0, 0, 0, 0.15);
             stroke-width: 0.5;
             fill-opacity: 0.6;
+            transition: all 0.3s ease;
+        }
+        
+        /* Enhanced surface materials */
+        .primary-surface {
+            filter: url(#noise-texture);
+        }
+        
+        .error-surface {
+            stroke: rgba(139, 69, 19, 0.3);
+            filter: url(#noise-texture) brightness(0.95);
+        }
+        
+        .resonance-surface {
+            filter: url(#noise-texture) url(#shimmer);
+            animation: subtle-shimmer 4s ease-in-out infinite;
+        }
+        
+        /* Surface edge highlighting (Fresnel effect) */
+        .surface-path:hover {
+            stroke: rgba(255, 255, 255, 0.8);
+            stroke-width: 1.5;
+            filter: brightness(1.1);
+        }
+        
+        /* Shimmer animation for resonance surface */
+        @keyframes subtle-shimmer {
+            0%, 100% { filter: url(#noise-texture) brightness(1.0); }
+            50% { filter: url(#noise-texture) brightness(1.05) saturate(1.1); }
         }
         
         .vertex-point {
@@ -126,6 +155,17 @@
         .axis-segment:hover {
             opacity: 1;
             filter: drop-shadow(0 0 10px currentColor);
+        }
+        
+        /* Enhanced interaction feedback */
+        .axis-group:hover .axis-segment {
+            opacity: 0.9;
+            filter: drop-shadow(0 0 8px currentColor);
+        }
+        
+        .axis-segment-border:hover {
+            stroke: rgba(255, 255, 255, 1);
+            stroke-width: 2;
         }
         
         .axis-tick {
@@ -455,6 +495,30 @@ HEIGHT = Intensity
             .attr('height', height)
             .attr('viewBox', `0 0 ${width} ${height}`);
         const defs = svg.append('defs');
+        
+        // Add noise texture filter for surfaces
+        const noiseFilter = defs.append('filter')
+            .attr('id', 'noise-texture')
+            .attr('x', '0%')
+            .attr('y', '0%')
+            .attr('width', '100%')
+            .attr('height', '100%');
+        
+        noiseFilter.append('feTurbulence')
+            .attr('baseFrequency', '0.9')
+            .attr('numOctaves', '1')
+            .attr('seed', '2')
+            .attr('stitchTiles', 'stitch');
+        
+        noiseFilter.append('feComponentTransfer')
+            .append('feFuncA')
+            .attr('type', 'discrete')
+            .attr('tableValues', '0 0.02 0.04 0.06');
+        
+        noiseFilter.append('feComposite')
+            .attr('operator', 'over')
+            .attr('in2', 'SourceGraphic');
+        
         const g = svg.append('g')
             .attr('transform', `translate(${width/2}, ${height/2 + 60})`);
         
@@ -1443,15 +1507,46 @@ all: \${OBJS}
                                 L ${points[3].projected.x} ${points[3].projected.y} Z`;
                     })
                     .attr('fill', d => surface.colorScale(d.avgHeight))
-                    .attr('fill-opacity', surface.opacity)
+                    .attr('fill-opacity', d => {
+                        // Transparency gradient from center to edge
+                        const centerX = 1.5;
+                        const centerZ = 1.5;
+                        const quadCenterX = (d.points[0].x + d.points[2].x) / 2;
+                        const quadCenterZ = (d.points[0].z + d.points[2].z) / 2;
+                        const distanceFromCenter = Math.sqrt(
+                            Math.pow(quadCenterX - centerX, 2) + 
+                            Math.pow(quadCenterZ - centerZ, 2)
+                        );
+                        const maxDistance = Math.sqrt(2.25 + 2.25); // Distance from center to corner
+                        const edgeFade = Math.max(0.3, 1 - (distanceFromCenter / maxDistance) * 0.4);
+                        return surface.opacity * edgeFade;
+                    })
                     .attr('stroke', d => {
-                        // Highlight discontinuities with darker strokes
+                        // Enhanced edge highlighting with Fresnel-like effect
                         const heightVariance = Math.abs(d.points[0].y - d.points[2].y);
-                        return heightVariance > 1 ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)';
+                        const avgHeight = d.avgHeight;
+                        
+                        // Edge detection for Fresnel effect
+                        const centerX = 1.5;
+                        const centerZ = 1.5;
+                        const quadCenterX = (d.points[0].x + d.points[2].x) / 2;
+                        const quadCenterZ = (d.points[0].z + d.points[2].z) / 2;
+                        const distanceFromCenter = Math.sqrt(
+                            Math.pow(quadCenterX - centerX, 2) + 
+                            Math.pow(quadCenterZ - centerZ, 2)
+                        );
+                        const maxDistance = Math.sqrt(2.25 + 2.25);
+                        const edgeIntensity = distanceFromCenter / maxDistance;
+                        
+                        if (heightVariance > 1) {
+                            return `rgba(255, 255, 255, ${0.3 + edgeIntensity * 0.4})`;
+                        } else {
+                            return `rgba(0, 0, 0, ${0.1 + edgeIntensity * 0.2})`;
+                        }
                     })
                     .attr('stroke-width', d => {
                         const heightVariance = Math.abs(d.points[0].y - d.points[2].y);
-                        return heightVariance > 1 ? 1 : 0.5;
+                        return heightVariance > 1 ? 1.2 : 0.5;
                     });
             });
             
@@ -1826,6 +1921,17 @@ all: \${OBJS}
                 .style('font-size', '24px')
                 .text('🔬');
             
+            // X axis current position orb with pulsing animation
+            const xCurrentPos = project3D(currentSignal, -1, 0);
+            g.append('circle')
+                .attr('class', 'axis-orb axis-orb-current x-orb')
+                .attr('cx', xCurrentPos.x)
+                .attr('cy', xCurrentPos.y + axisOffset)
+                .attr('r', 12)
+                .attr('fill', '#4488ff')
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 3);
+            
             // ===== Y-axis (Error Surface) - Using 3D→2D projection like X and Z =====
             const yAxisGroup = g.append('g').attr('class', 'y-axis-group');
             
@@ -1924,6 +2030,17 @@ all: \${OBJS}
                 .attr('text-anchor', 'middle')
                 .style('font-size', '24px')
                 .text('💠');
+            
+            // Y axis current position orb with pulsing animation
+            const yCurrentPos = project3D(-0.5, -1 + (currentError * 4/3), -0.5);
+            g.append('circle')
+                .attr('class', 'axis-orb axis-orb-current y-orb')
+                .attr('cx', yCurrentPos.x - 25)
+                .attr('cy', yCurrentPos.y)
+                .attr('r', 12)
+                .attr('fill', '#4488ff')
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 3);
             
             // ===== Z-axis (Dependencies) - Bottom left edge going back =====
             const zAxisGroup = g.append('g').attr('class', 'z-axis-group');
@@ -2024,6 +2141,17 @@ all: \${OBJS}
                 .attr('text-anchor', 'start')
                 .style('font-size', '24px')
                 .text('🎀');
+            
+            // Z axis current position orb with pulsing animation
+            const zCurrentPos = project3D(-0.5, -1, currentDeps);
+            g.append('circle')
+                .attr('class', 'axis-orb axis-orb-current z-orb')
+                .attr('cx', zCurrentPos.x)
+                .attr('cy', zCurrentPos.y + axisOffset)
+                .attr('r', 12)
+                .attr('fill', '#4488ff')
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 3);
         }
         
         function showStateDescription(vertex) {
