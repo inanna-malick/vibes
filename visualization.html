@@ -628,6 +628,18 @@ HEIGHT = Intensity
     </div>
     
     <script>
+        // Load vibes data from external JSON file
+        fetch('vibes-data.json')
+            .then(response => response.json())
+            .then(vibesData => {
+                initializeVisualization(vibesData);
+            })
+            .catch(error => {
+                console.error('Error loading vibes data:', error);
+                document.body.innerHTML = '<div style="padding: 20px; color: red;">Error loading vibes data. Please ensure vibes-data.json is in the same directory.</div>';
+            });
+        
+        function initializeVisualization(vibesData) {
         try {
         // Configuration
         const baseWidth = 1200;
@@ -677,10 +689,10 @@ HEIGHT = Intensity
         const g = svg.append('g')
             .attr('transform', `translate(${width/2}, ${height/2 + 60})`);
         
-        // Emoji mappings - reversed so 3 is best
-        const signalEmojis = ['🙈', '👓', '🔍', '🔬'];
-        const dependencyEmojis = ['🌀', '🧶', '🪢', '🎀'];
-        const errorEmojis = ['🌊', '💧', '🧊', '💠'];
+        // Extract emoji mappings from vibesData - reversed so 3 is best
+        const signalEmojis = vibesData.dimensions.signalDensity.levels;
+        const dependencyEmojis = vibesData.dimensions.dependencies.levels;
+        const errorEmojis = vibesData.dimensions.errorSurface.levels;
         
         // Current state values
         let currentState = {
@@ -689,532 +701,20 @@ HEIGHT = Intensity
             error: 3
         };
         
-        // Code examples for each state
-        const codeExamples = {
-            // Peak experiences
-            "3-3-3": {
-                lang: "Haskell",
-                code: `-- Pure crystalline perfection
-traverse :: (Traversable t, Applicative f) => (a -> f b) -> t a -> f (t b)
-
--- Every character essential, dependencies flow like water
-result = (\\x y z -> x + y * z) <$> Just 3 <*> Just 4 <*> Just 5`
-            },
-            
-            // Total collapse
-            "0-0-0": {
-                lang: "JavaScript (Legacy)",
-                code: `// What even is this
-eval(atob(x[~~(Math.random()*x.length)]))((function(){
-  try{return arguments.callee.caller.caller.caller.apply(this,arguments)}
-  catch(e){var a=[];for(var i in window)a.push(i);return a.join('')}
-})())`
-            },
-            
-            // Mixed states
-            "2-2-2": {
-                lang: "Python",
-                code: `# Functional but nothing special
-def process_data(items):
-    results = []
-    for item in items:
-        if item.is_valid():
-            results.append(item.transform())
-    return results`
-            },
-            
-            "3-2-3": {
-                lang: "Rust",
-                code: `// Perfect clarity, intentional complexity, rock-solid
-fn parse<'a, T>(input: &'a str) -> IResult<&'a str, T> 
-where 
-    T: FromStr + Debug,
-    <T as FromStr>::Err: Debug
-{
-    map_res(take_while1(|c: char| c.is_ascii_digit()), |s: &str| s.parse())(input)
-}`
-            },
-            
-            "1-1-1": {
-                lang: "PHP (WordPress style)",
-                code: `// Everything degraded but somehow still works
-function get_the_thing($id) {
-    global $wpdb, $current_user, $_config;
-    $q = "SELECT * FROM " . $wpdb->prefix . "things WHERE id = $id";
-    $r = $wpdb->get_results($q);
-    return $r ? $r[0] : false;
-}`
-            },
-            
-            "0-3-3": {
-                lang: "Category Theory Notation",
-                code: `-- Can't parse symbols but feel the perfect flow
-∀ (F : C ⥤ D) (G : D ⥤ E), (G ⋙ F).obj = λ X, G.obj (F.obj X)
--- Blind to meaning but structure resonates perfectly`
-            },
-            
-            "3-0-0": {
-                lang: "Go (with goroutine leak)",
-                code: `// See every detail of the chaos
-for i := 0; i < 1000; i++ {
-    go func(n int) {
-        ch := make(chan int)  // Never closed
-        go func() { 
-            select {}          // Blocks forever
-        }()
-        leaked[n] = ch         // Perfect view of accumulating disaster
-    }(i)
-}`
-            },
-            
-            "2-3-2": {
-                lang: "React Hooks",
-                code: `// Clear flow but fragile foundation
-const useData = (id) => {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    fetch(\`/api/data/\${id}\`)
-      .then(r => r.json())
-      .then(setData)
-      .finally(() => setLoading(false));
-  }, [id]); // Clean but no error handling
-  
-  return { data, loading };
-}`
-            },
-            
-            "1-2-3": {
-                lang: "TypeScript",
-                code: `// Squinting through type complexity but it's solid
-type DeepPartial<T> = T extends object ? {
-  [P in keyof T]?: DeepPartial<T[P]>;
-} : T;
-
-// Can barely follow but know it's correct`
-            },
-            
-            "3-1-2": {
-                lang: "Regex",
-                code: `// Perfect view of the tangle
-/^(?:(?:(?:0?[13578]|1[02])(\\/|-|\\.)31)|(?:(?:0?[1,3-9]|1[0-2])(\\/|-|\\.)(?:29|30)))(\\/|-|\\.)(?:[1-9]\\d{3}|\\d{2})$|^(?:0?2(\\/|-|\\.)29)(\\/|-|\\.)(?:(?:(?:1[6-9]|[2-9]\\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00)))$|^(?:(?:0?[1-9])|(?:1[0-2]))(\\/|-|\\.)(?:0?[1-9]|1\\d|2[0-8])(\\/|-|\\.)(?:[1-9]\\d{3}|\\d{2})$/
-// Every knot visible in excruciating detail`
-            },
-            
-            "0-1-1": {
-                lang: "Perl (golfed)",
-                code: `# Dark tangles melting
-$_=<>;s/\\s//g;@a=split//;for($i=0;$i<@a;){$_=$a[$i];/\\d/?push@s,$_:/[+\\-*\\/]/?push@s,(pop@s).$_.pop@s:0;$i++}eval pop@s`
-            },
-            
-            "2-0-2": {
-                lang: "Node.js callback hell",
-                code: `// Clear view of stable chaos
-getData(id, (err, data) => {
-  if (!err) {
-    processData(data, (err, processed) => {
-      if (!err) {
-        saveData(processed, (err, saved) => {
-          if (!err) {
-            notifyUser(saved, (err) => {
-              // Pyramid of doom, crystal clear
-            });
-          }
-        });
-      }
-    });
-  }
-});`
-            },
-            
-            "1-3-2": {
-                lang: "Nix expression",
-                code: `# Squinting at perfect flow on shaky ground
-{ pkgs ? import <nixpkgs> {} }:
-pkgs.stdenv.mkDerivation {
-  pname = "example";
-  version = "1.0";
-  src = ./.;
-  buildInputs = with pkgs; [ gcc make ];
-  # Beautiful but fragile - one typo breaks everything
-}`
-            },
-            
-            "3-3-1": {
-                lang: "APL (melting perfection)",
-                code: `⍝ Transcendent but dissolving
-life ← {⊃1 ⍵ ∨.∧ 3 4 = +/ +⌿ ¯1 0 1 ∘.⊖ ¯1 0 1 ⌽¨ ⊂⍵}
-⍝ Perfect expression starting to liquify in my mind`
-            },
-            
-            "0-2-0": {
-                lang: "Enterprise Java XML Config",
-                code: `<!-- Blind but structured chaos -->
-<bean id="abstractParentBean" abstract="true" 
-      class="com.enterprise.AbstractFactoryProducerStrategyImpl">
-  <property name="processorFactory">
-    <bean class="com.enterprise.ProcessorFactoryFactoryImpl">
-      <!-- Can't see what this does but it's very organized -->
-    </bean>
-  </property>
-</bean>`
-            },
-            
-            "2-1-3": {
-                lang: "C with macros",
-                code: `// Clear knots on bedrock
-#define SWAP(a,b) do { typeof(a) _tmp = (a); (a) = (b); (b) = _tmp; } while(0)
-#define MAX(a,b) ({ typeof(a) _a = (a); typeof(b) _b = (b); _a > _b ? _a : _b; })
-// Tangles visible but foundation solid`
-            },
-            
-            "1-0-2": {
-                lang: "Bash one-liner",
-                code: `# Squinting at frozen chaos
-find . -name "*.log" -exec grep -l "ERROR" {} \\; | xargs -I {} sh -c 'echo "{}:"; grep "ERROR" {} | head -5' | less`
-            },
-            
-            "3-2-1": {
-                lang: "Async/Await (failing)",
-                code: `// Perfect sight of dissolution
-async function processAll(items) {
-  return items.map(async (item) => {  // Returns promises, not values!
-    const result = await transform(item);
-    return result;
-  }); // Crystal clear view of a common mistake melting the logic
-}`
-            },
-            
-            "0-0-1": {
-                lang: "Minified JavaScript",
-                code: `// Void liquifying
-!function(e,t){"use strict";"object"==typeof module&&"object"==typeof module.exports?module.exports=e.document?t(e,!0):function(e){if(!e.document)throw new Error("jQuery requires a window with a document");return t(e)}:t(e)}("undefined"!=typeof window?window:this,function(e,t){var n=[],r=e.document,i=Object.getPrototypeOf,o=n.slice,a=n.concat,s=n.push,u=n.indexOf,l={},c=l.toString,f=l.hasOwnProperty,p=f.toString,d=p.call(Object),h={},g=function e(t){return"function"==typeof t&&"number"!=typeof t.nodeType}...`
-            },
-            
-            "2-2-0": {
-                lang: "SQL (cascading deletes)",
-                code: `-- Functional drowning
-DELETE FROM users WHERE created_at < '2020-01-01';
--- Looks simple, but triggers cascade through 47 tables
--- Clear enough to understand, organized enough to track,
--- but the cascade will bring down production`
-            },
-            
-            "1-3-0": {
-                lang: "JavaScript (RxJS)",
-                code: `// Squinting at beautiful destruction
-Observable.fromEvent(window, 'resize')
-  .pipe(
-    debounceTime(150),
-    map(e => ({ w: e.target.innerWidth, h: e.target.innerHeight })),
-    distinctUntilChanged((a, b) => a.w === b.w && a.h === b.h),
-    switchMap(size => recalculateLayout(size)),
-    tap(layout => updateDOM(layout)),
-    retry(3)
-  )
-  .subscribe();
-// Elegant chain but one missing error handler crashes everything`
-            },
-            
-            "2-1-1": {
-                lang: "Python",
-                code: `# Clear view of tangled state management dissolving
-class StateManager:
-    def __init__(self):
-        self._state = {}
-        self._observers = []
-        self._locks = {}
-    
-    def update(self, key, value):
-        if key in self._locks:  # Wait, who holds locks?
-            self._state[key] = value
-            for obs in self._observers:  # Some observers modify state...
-                obs.notify(key, value)   # ...causing recursive updates
-        # Clear enough to see the circular dependencies forming`
-            },
-            
-            "2-2-1": {
-                lang: "JavaScript (Redux)",
-                code: `// Redux reducer - clear logic starting to fail
-function userReducer(state = initialState, action) {
-  switch (action.type) {
-    case 'UPDATE_USER':
-      return { ...state, ...action.payload };
-    case 'UPDATE_PREFERENCES':
-      // Wait, this mutates nested state
-      state.preferences[action.key] = action.value;
-      return state;  // Returns mutated state, not new object
-    case 'RESET':
-      return initialState;  // But initialState got mutated above!
-  }
-}
-// Decent pattern corrupted by mutation`
-            },
-            
-            "3-0-1": {
-                lang: "Haskell",
-                code: `-- Perfect clarity watching pure chaos become impure
-unsafePerformIO $ do
-  state <- newIORef []
-  forkIO $ forever $ do
-    modifyIORef state (++ [1])
-    threadDelay 1000
-  forkIO $ forever $ do
-    current <- readIORef state
-    writeIORef state (reverse current)
-  -- Crystal clear race conditions liquifying purity
-  readIORef state`
-            },
-            
-            "3-2-0": {
-                lang: "Java (Spring Boot)",
-                code: `// Spring Boot - every annotation's cascade visible
-@RestController
-@Transactional(propagation = Propagation.REQUIRED)
-@CacheEvict(value = "users", allEntries = true)
-@Retryable(maxAttempts = 3, backoff = @Backoff(delay = 1000))
-@CircuitBreaker(requestVolumeThreshold = 10, failureRatio = 0.5)
-@RateLimiter(name = "userService")
-@Slf4j
-public class UserController {
-    @Autowired private UserService userService;
-    @Autowired private CacheManager cacheManager;
-    @Autowired private TransactionManager txManager;
-    // See every annotation triggering its framework cascade
-}`
-            },
-            
-            "3-3-0": {
-                lang: "Haskell",
-                code: `-- Perfect elegance triggering infinite evaluation
-fibonacci :: [Integer]
-fibonacci = 0 : 1 : zipWith (+) fibonacci (tail fibonacci)
-
-primes :: [Integer]
-primes = sieve [2..] where
-  sieve (p:xs) = p : sieve [x | x <- xs, x \`mod\` p /= 0]
-
--- Both beautiful and catastrophic when fully evaluated
-main = print $ sum $ take 1000000 primes
--- Elegant algorithms, memory cascade inevitable`
-            },
-            
-            "1-1-3": {
-                lang: "Make",
-                code: `# Struggling on bedrock
-%.o: %.c
-\t$(CC) $(CFLAGS) -c $< -o $@
-\t@echo "Building $@"
-
-# Tabs vs spaces will haunt you, but at least Make is eternal`
-            },
-            
-            "3-0-3": {
-                lang: "Prolog (infinite backtracking)",
-                code: `% Perfect vision of perfect chaos
-path(X, Y) :- edge(X, Y).
-path(X, Y) :- edge(X, Z), path(Z, Y).
-edge(a, b). edge(b, c). edge(c, a).
-% Crystal clear infinite loop - see it all, fix nothing`
-            },
-            
-            "0-3-1": {
-                lang: "Monad Transformers",
-                code: `-- Blind perfect cascade
-newtype AppM a = AppM (ReaderT Config (ExceptT Error (StateT AppState IO)) a)
-  deriving (Functor, Applicative, Monad, MonadReader Config, 
-           MonadError Error, MonadState AppState, MonadIO)
--- Can't see types but feel them dissolving perfectly`
-            },
-            
-            "2-0-3": {
-                lang: "CSS Specificity War",
-                code: `/* Clear chaos crystallized */
-#page .content div.main article > p:first-child::first-letter { color: red !important; }
-body #page .content div.main article p:first-child:first-letter { color: blue !important; }
-html body #page .content div.main article p:first-child::first-letter { color: green !important; }
-/* See every detail of the specificity battle, frozen in time */`
-            },
-            
-            "1-2-1": {
-                lang: "Docker Compose",
-                code: `# Fuzzy flow failing
-version: '3'
-services:
-  web:
-    build: .
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
-    environment:
-      DATABASE_URL: postgresql://user:pass@db:5432/app
-  db:
-    image: postgres
-    # Decent structure but env vars might not propagate right`
-            },
-            
-            "3-1-1": {
-                lang: "Template Metaprogramming",
-                code: `// Perfect view of failing tangles
-template<int N>
-struct Factorial {
-    static constexpr int value = N * Factorial<N-1>::value;
-};
-template<>
-struct Factorial<0> {
-    static constexpr int value = 1;
-};
-// See every recursive instantiation as it spirals`
-            },
-            
-            "0-2-2": {
-                lang: "Kubernetes YAML",
-                code: `# Blind competence
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-  labels:
-    app: nginx
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: nginx
-  # Trust the structure, can't see what it does`
-            },
-            
-            "2-3-0": {
-                lang: "GraphQL (circular)",
-                code: `# Clear perfect cascade
-type User {
-  id: ID!
-  posts: [Post!]!
-  friends: [User!]!
-}
-
-type Post {
-  author: User!
-  mentionedUsers: [User!]!
-  relatedPosts: [Post!]!
-}
-# Beautiful structure, infinite query depth = server death`
-            },
-            
-            "1-0-3": {
-                lang: "Assembly",
-                code: `; Glimpsing solid chaos
-mov rax, 0x2000004
-mov rdi, 1
-mov rsi, msg
-mov rdx, 13
-syscall
-; Barely readable but unchanging since 1970s`
-            },
-            
-            "0-3-2": {
-                lang: "Elm",
-                code: `-- Blind flow on ice
-update : Msg -> Model -> (Model, Cmd Msg)
-update msg model =
-  case msg of
-    GotData result ->
-      case result of
-        Ok data -> ({ model | data = data }, Cmd.none)
-        Err _ -> (model, Cmd.none)
--- Can't see types but feel the flow working... for now`
-            },
-            
-            "3-1-0": {
-                lang: "Spring Annotations",
-                code: `// Perfect view of cascade
-@RestController
-@RequestMapping("/api/v1/users")
-@RequiredArgsConstructor
-@Slf4j
-@Validated
-@CrossOrigin(origins = "*")
-@EnableTransactionManagement
-@EntityScan("com.example.model")
-@EnableJpaRepositories("com.example.repository")
-public class UserController {
-    // See every annotation's effect rippling through system
-}`
-            },
-            
-            "2-1-0": {
-                lang: "Promise chains",
-                code: `// Seeing knots cascade
-fetchUser(id)
-  .then(user => fetchPosts(user.id))
-  .then(posts => Promise.all(posts.map(p => enrichPost(p))))
-  .then(enriched => filterActive(enriched))
-  .catch(err => console.log(err))
-// Clear view of error swallowing everything downstream`
-            },
-            
-            "1-3-3": {
-                lang: "Dhall",
-                code: `-- Squinting at paradise
-let Config = { database : Text, port : Natural, enableSSL : Bool }
-let default = { database = "postgres", port = 5432, enableSSL = True }
-let production = default // { enableSSL = True, port = 443 }
--- Can barely read but know it's perfect and unbreakable`
-            },
-            
-            "0-1-2": {
-                lang: "Brainfuck",
-                code: `Dark tangles holding
-++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.`
-            },
-            
-            "2-2-3": {
-                lang: "Swift",
-                code: `// Solid competence
-struct User: Codable {
-    let id: UUID
-    let name: String
-    let email: String
-    
-    func validate() -> Result<User, ValidationError> {
-        guard email.contains("@") else {
-            return .failure(.invalidEmail)
-        }
-        return .success(self)
-    }
-}
-// Everything good enough on perfect foundation`
-            },
-            
-            "3-0-2": {
-                lang: "Concurrent HashMap",
-                code: `// Microscopic stable chaos
-map.compute(key, (k, v) -> {
-    if (v == null) {
-        return map.putIfAbsent(k, new Value()); // Race condition!
-    }
-    v.counter.incrementAndGet(); // Another thread might null v
-    return v;
-});
-// See every race condition frozen in crystal clarity`
-            },
-            
-            "0-2-3": {
-                lang: "Makefile (BSD vs GNU)",
-                code: `# Blind but works everywhere
-.PHONY: all clean
-
-SRCS != find . -name "*.c"
-OBJS := \${SRCS:.c=.o}
-
-all: \${OBJS}
-\t\${CC} -o program \${OBJS}
-
-# Trust in 40 years of stability`
+        // Create lookup maps for vibes data
+        const vibesLookup = {};
+        const codeExamples = {};
+        
+        // Build lookup maps from vibesData
+        vibesData.vibes.forEach(vibe => {
+            vibesLookup[vibe.binary] = vibe;
+            if (vibe.code) {
+                codeExamples[vibe.binary] = {
+                    lang: vibe.code.language,
+                    code: vibe.code.example
+                };
             }
-        };
+        });
         
         // Generate natural language descriptions for each vertex
         function getStateDescription(signal, dependencies, error) {
@@ -1222,9 +722,31 @@ all: \${OBJS}
             const d = dependencyEmojis[dependencies];
             const e = errorEmojis[error];
             
-            // Create a unique phenomenological description for each state
+            // Look up the state in vibesLookup
             const stateKey = `${signal}-${dependencies}-${error}`;
-            const phenomenology = {
+            const vibeData = vibesLookup[stateKey];
+            
+            if (vibeData) {
+                return {
+                    emoji: `${s}${d}${e}`,
+                    title: vibeData.title,
+                    description: vibeData.forHumans,
+                    phenomenology: vibeData.phenomenology,
+                    code: codeExamples[stateKey]
+                };
+            } else {
+                return {
+                    emoji: `${s}${d}${e}`,
+                    title: "Unnamed State",
+                    description: `Signal ${signal}, Dependencies ${dependencies}, Error ${error} - a unique phenomenological combination awaiting exploration.`,
+                    phenomenology: null,
+                    code: null
+                };
+            }
+        }
+        
+        // OLD PHENOMENOLOGY DATA REMOVED - NOW LOADED FROM vibes-data.json
+        const phenomenology = {
                 // Total collapse
                 "0-0-0": {
                     title: "Absolute Void",
@@ -1475,20 +997,7 @@ all: \${OBJS}
                     title: "Fuzzy Structure Failing",
                     description: "Squinting at decent organization as it collapses. Like trying to read a map in wind and rain - was useful, now dissolving."
                 }
-            };
-            
-            const state = phenomenology[stateKey] || {
-                title: "Unnamed State",
-                description: `Signal ${signal}, Dependencies ${dependencies}, Error ${error} - a unique phenomenological combination awaiting exploration.`
-            };
-            
-            return {
-                emoji: `${s}${d}${e}`,
-                title: state.title,
-                description: state.description,
-                code: codeExamples[stateKey]
-            };
-        }
+            }; // End of removed phenomenology object
         
         // 3D projection
         function project3D(x, y, z) {
@@ -2711,6 +2220,8 @@ ${description.code.code}
         } catch (error) {
             console.error('Visualization error:', error);
         }
+        
+        } // End of initializeVisualization function
     </script>
 </body>
 </html>
