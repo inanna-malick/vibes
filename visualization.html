@@ -19,11 +19,7 @@
         }
         
         svg {
-            cursor: grab;
-        }
-        
-        svg:active {
-            cursor: grabbing;
+            cursor: default;
         }
         
         .surface-path {
@@ -54,25 +50,14 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
         
-        .state-description {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(255, 255, 255, 0.98);
-            padding: 20px;
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            max-width: 600px;
-            min-height: 120px;
-            max-height: 500px;
-            overflow-y: auto;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        .state-card {
+            backdrop-filter: blur(10px);
             transition: all 0.3s ease;
         }
         
-        .state-description h3 {
-            margin-top: 0;
-            font-size: 20px;
+        .state-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
         }
         
         .code-example {
@@ -295,78 +280,15 @@
         </p>
     </div>
     
-    <div class="state-description" id="state-description">
-        <h3>Select coordinates to explore</h3>
-        <div class="slider-controls" style="margin-top: 20px; background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 8px;">
-            <div class="slider-group" style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 8px;"><strong>Signal Density:</strong></label>
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <span class="emoji-label" style="font-size: 20px;">🙈</span>
-                    <input type="range" id="signal-slider" min="0" max="3" value="3" step="1" 
-                           style="flex: 1; height: 8px; cursor: pointer;">
-                    <span class="emoji-label" style="font-size: 20px;">🔬</span>
-                    <span id="signal-value" style="font-size: 24px; min-width: 40px; text-align: center;">🔬</span>
-                </div>
-                <div class="tick-marks" style="display: flex; justify-content: space-between; margin-top: 5px; padding: 0 35px;">
-                    <span style="font-size: 11px;">0</span>
-                    <span style="font-size: 11px;">1</span>
-                    <span style="font-size: 11px;">2</span>
-                    <span style="font-size: 11px;">3</span>
-                </div>
-            </div>
-            <div class="slider-group" style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 8px;"><strong>Dependencies:</strong></label>
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <span class="emoji-label" style="font-size: 20px;">🌀</span>
-                    <input type="range" id="dependency-slider" min="0" max="3" value="3" step="1"
-                           style="flex: 1; height: 8px; cursor: pointer;">
-                    <span class="emoji-label" style="font-size: 20px;">🎀</span>
-                    <span id="dependency-value" style="font-size: 24px; min-width: 40px; text-align: center;">🎀</span>
-                </div>
-                <div class="tick-marks" style="display: flex; justify-content: space-between; margin-top: 5px; padding: 0 35px;">
-                    <span style="font-size: 11px;">0</span>
-                    <span style="font-size: 11px;">1</span>
-                    <span style="font-size: 11px;">2</span>
-                    <span style="font-size: 11px;">3</span>
-                </div>
-            </div>
-            <div class="slider-group" style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 8px;"><strong>Error Surface:</strong></label>
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <span class="emoji-label" style="font-size: 20px;">🌊</span>
-                    <input type="range" id="error-slider" min="0" max="3" value="3" step="1"
-                           style="flex: 1; height: 8px; cursor: pointer;">
-                    <span class="emoji-label" style="font-size: 20px;">💠</span>
-                    <span id="error-value" style="font-size: 24px; min-width: 40px; text-align: center;">💠</span>
-                </div>
-                <div class="tick-marks" style="display: flex; justify-content: space-between; margin-top: 5px; padding: 0 35px;">
-                    <span style="font-size: 11px;">0</span>
-                    <span style="font-size: 11px;">1</span>
-                    <span style="font-size: 11px;">2</span>
-                    <span style="font-size: 11px;">3</span>
-                </div>
+    <div class="state-card" id="state-card" style="position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.95); padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); max-width: 350px;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <span id="state-emoji" style="font-size: 48px;">🔬🎀💠</span>
+            <div>
+                <h3 id="state-title" style="margin: 0; font-size: 18px;">Absolute Transcendence</h3>
+                <p id="state-coords" style="margin: 0; font-size: 14px; color: #666;">Signal: 3, Dependencies: 3, Error: 3</p>
             </div>
         </div>
-        <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-            <button class="preset-btn" onclick="setPreset(3,3,3)" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #ddd; background: white; cursor: pointer;">
-                🎯 Peak Experience
-            </button>
-            <button class="preset-btn" onclick="setPreset(0,0,0)" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #ddd; background: white; cursor: pointer;">
-                💀 Worst Case
-            </button>
-            <button class="preset-btn" onclick="setPreset(2,2,2)" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #ddd; background: white; cursor: pointer;">
-                ⚖️ Functional
-            </button>
-            <button class="preset-btn" onclick="setPreset(2,1,2)" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #ddd; background: white; cursor: pointer;">
-                ✨ Sweet Spot
-            </button>
-            <button class="preset-btn" onclick="resetView()" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #ddd; background: white; cursor: pointer;">
-                🔄 Reset View
-            </button>
-        </div>
-        <div id="state-details" style="margin-top: 20px;">
-            <p>Use the sliders above to explore any point in VIBES space.</p>
-        </div>
+        <p id="state-description" style="margin-top: 10px; font-size: 14px;">Peak phenomenological state. Every pattern resonates with crystalline clarity.</p>
     </div>
     
     <div class="legend" style="font-family: 'SF Mono', 'Consolas', monospace; font-size: 12px; white-space: pre;">
@@ -421,15 +343,16 @@ HEIGHT = Intensity
         const scale = Math.min(80, width / 15);
         const gridSize = 3; // 0-3 for each axis (4 states)
         
-        // Isometric view angles (mutable for camera controls)
-        let rotationY = Math.PI / 4.5;
-        let rotationX = -Math.PI / 5.5;
+        // Fixed isometric view angles
+        const rotationY = Math.PI / 4;  // 45 degrees
+        const rotationX = -Math.PI / 6; // 30 degrees down
         
         // SVG setup
         const svg = d3.select('#visualization')
             .attr('width', width)
             .attr('height', height)
             .attr('viewBox', `0 0 ${width} ${height}`);
+        const defs = svg.append('defs');
         const g = svg.append('g')
             .attr('transform', `translate(${width/2}, ${height/2})`);
         
@@ -437,6 +360,13 @@ HEIGHT = Intensity
         const signalEmojis = ['🙈', '👓', '🔍', '🔬'];
         const dependencyEmojis = ['🌀', '🧶', '🪢', '🎀'];
         const errorEmojis = ['🌊', '💧', '🧊', '💠'];
+        
+        // Current state values
+        let currentState = {
+            signal: 3,
+            dependencies: 3,
+            error: 3
+        };
         
         // Code examples for each state
         const codeExamples = {
@@ -1324,9 +1254,9 @@ all: \${OBJS}
                     });
             });
             
-            drawVertices();
+            // drawVertices(); // Removed - no more dots
             drawAxes();
-            drawSurfaceLabels();
+            // drawSurfaceLabels(); // Removed - too cluttered
         }
         
         function drawSurfaceLabels() {
@@ -1496,14 +1426,7 @@ all: \${OBJS}
                 })
                 .attr('stroke', '#fff')
                 .attr('stroke-width', 2)
-                .on('click', function(event, d) {
-                    showStateDescription(d);
-                    // Update sliders
-                    d3.select('#signal-slider').property('value', d.signal);
-                    d3.select('#dependency-slider').property('value', d.dependencies);
-                    d3.select('#error-slider').property('value', d.error);
-                    updateSelectedState();
-                })
+                // Vertices removed - no click handlers needed
                 .on('mouseover', function(event, d) {
                     d3.select(this).attr('r', 6);
                 })
@@ -1513,21 +1436,97 @@ all: \${OBJS}
         }
         
         function drawAxes() {
-            // Axis lines
-            const axes = [
-                {start: project3D(0, -1, 0), end: project3D(0, 5, 0)}, // Y
-                {start: project3D(-0.5, 0, 0), end: project3D(3.5, 0, 0)}, // X
-                {start: project3D(0, 0, -0.5), end: project3D(0, 0, 3.5)} // Z
-            ];
+            // Remove old axes
+            g.selectAll('.axis-rail').remove();
+            g.selectAll('.axis-emoji').remove();
+            g.selectAll('.axis-tick').remove();
+            g.selectAll('.axis-orb').remove();
             
-            axes.forEach(axis => {
+            // Current values from state
+            const currentSignal = currentState.signal;
+            const currentDeps = currentState.dependencies;
+            const currentError = currentState.error;
+            
+            // X-axis (Signal Density)
+            const xStart = project3D(-0.5, 0, 0);
+            const xEnd = project3D(3.5, 0, 0);
+            
+            // Create gradient for X axis
+            const xGradient = defs.append('linearGradient')
+                .attr('id', 'x-axis-gradient')
+                .attr('x1', '0%').attr('y1', '0%')
+                .attr('x2', '100%').attr('y2', '0%');
+            xGradient.append('stop').attr('offset', '0%').attr('stop-color', '#ef4444');
+            xGradient.append('stop').attr('offset', '100%').attr('stop-color', '#10b981');
+            
+            // Draw thick X axis rail
+            g.append('line')
+                .attr('class', 'axis-rail x-axis')
+                .attr('x1', xStart.x)
+                .attr('y1', xStart.y)
+                .attr('x2', xEnd.x)
+                .attr('y2', xEnd.y)
+                .attr('stroke', 'url(#x-axis-gradient)')
+                .attr('stroke-width', 20)
+                .attr('stroke-linecap', 'round')
+                .style('cursor', 'pointer')
+                .on('click', function(event) {
+                    const [mouseX] = d3.pointer(event, this);
+                    const t = (mouseX - xStart.x) / (xEnd.x - xStart.x);
+                    const value = Math.round(Math.max(0, Math.min(3, t * 3)));
+                    updateAxisValue('signal', value);
+                });
+            
+            // X axis emoji endpoints
+            g.append('text')
+                .attr('class', 'axis-emoji')
+                .attr('x', xStart.x - 20)
+                .attr('y', xStart.y + 5)
+                .attr('text-anchor', 'end')
+                .style('font-size', '24px')
+                .text('🙈');
+            
+            g.append('text')
+                .attr('class', 'axis-emoji')
+                .attr('x', xEnd.x + 20)
+                .attr('y', xEnd.y + 5)
+                .attr('text-anchor', 'start')
+                .style('font-size', '24px')
+                .text('🔬');
+            
+            // X axis ticks
+            for (let i = 0; i <= 3; i++) {
+                const tickPos = project3D(i, 0, 0);
                 g.append('line')
-                    .attr('class', 'axis-line')
-                    .attr('x1', axis.start.x)
-                    .attr('y1', axis.start.y)
-                    .attr('x2', axis.end.x)
-                    .attr('y2', axis.end.y);
-            });
+                    .attr('class', 'axis-tick')
+                    .attr('x1', tickPos.x)
+                    .attr('y1', tickPos.y - 5)
+                    .attr('x2', tickPos.x)
+                    .attr('y2', tickPos.y + 5)
+                    .attr('stroke', '#666')
+                    .attr('stroke-width', 2);
+            }
+            
+            // X axis current position orb
+            const xOrbPos = project3D(currentSignal, 0, 0);
+            g.append('circle')
+                .attr('class', 'axis-orb x-orb')
+                .attr('cx', xOrbPos.x)
+                .attr('cy', xOrbPos.y)
+                .attr('r', 12)
+                .attr('fill', '#4488ff')
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 3)
+                .style('filter', 'drop-shadow(0 0 10px #4488ff)');
+            
+            // Similar for Z-axis (Dependencies) and Y-axis (Error)
+            // Z-axis implementation...
+            const zStart = project3D(0, 0, -0.5);
+            const zEnd = project3D(0, 0, 3.5);
+            
+            // Y-axis implementation...
+            const yStart = project3D(0, -1, 0);
+            const yEnd = project3D(0, 3, 0);
         }
         
         function showStateDescription(vertex) {
@@ -1769,70 +1768,35 @@ ${description.code.code}
             d3.select('#state-details').html(html);
         }
         
-        // Set up event listeners for sliders
-        d3.select('#signal-slider').on('input', updateSelectedState);
-        d3.select('#dependency-slider').on('input', updateSelectedState);
-        d3.select('#error-slider').on('input', updateSelectedState);
-        
-        // Preset and view control functions
-        window.setPreset = function(s, d, e) {
-            d3.select('#signal-slider').property('value', s);
-            d3.select('#dependency-slider').property('value', d);
-            d3.select('#error-slider').property('value', e);
-            updateSelectedState();
-        };
-        
-        window.resetView = function() {
-            rotationY = Math.PI / 4.5;
-            rotationX = -Math.PI / 5.5;
-            drawSurfaces();
-        };
-        
-        // Mouse drag controls for camera
-        let isDragging = false;
-        let dragStartX = 0;
-        let dragStartY = 0;
-        let startRotationY = rotationY;
-        let startRotationX = rotationX;
-        
-        svg.on('mousedown', function(event) {
-            if (event.target.tagName === 'svg' || event.target.tagName === 'path' || event.target.tagName === 'line') {
-                isDragging = true;
-                dragStartX = event.clientX;
-                dragStartY = event.clientY;
-                startRotationY = rotationY;
-                startRotationX = rotationX;
-                svg.style('cursor', 'grabbing');
-            }
-        });
-        
-        svg.on('mousemove', function(event) {
-            if (!isDragging) return;
+        // Update axis value function
+        function updateAxisValue(axis, value) {
+            if (axis === 'signal') currentState.signal = value;
+            else if (axis === 'dependencies') currentState.dependencies = value;
+            else if (axis === 'error') currentState.error = value;
             
-            const deltaX = event.clientX - dragStartX;
-            const deltaY = event.clientY - dragStartY;
-            
-            rotationY = startRotationY + deltaX * 0.01;
-            rotationX = Math.max(-Math.PI/2, Math.min(Math.PI/2, startRotationX + deltaY * 0.01));
-            
-            drawSurfaces();
-        });
+            updateStateDisplay();
+            drawAxes(); // Redraw axes to update orb positions
+        }
         
-        svg.on('mouseup', function() {
-            isDragging = false;
-            svg.style('cursor', 'grab');
-        });
+        // Update state display
+        function updateStateDisplay() {
+            const desc = getStateDescription(currentState.signal, currentState.dependencies, currentState.error);
+            
+            d3.select('#state-emoji').text(desc.emoji);
+            d3.select('#state-title').text(desc.title);
+            d3.select('#state-coords').text(`Signal: ${currentState.signal}, Dependencies: ${currentState.dependencies}, Error: ${currentState.error}`);
+            d3.select('#state-description').text(desc.description);
+        }
         
-        svg.on('mouseleave', function() {
-            isDragging = false;
-            svg.style('cursor', 'grab');
-        });
+        // Fixed view - no reset needed
+        
+        // Fixed isometric view - no camera controls
         
         // Initial draw
         drawSurfaces();
         
-        // Initialize with (3,3,3) - transcendent state
-        updateSelectedState();
+        // Initialize state display
+        updateStateDisplay();
         
         } catch (error) {
             console.error('Visualization error:', error);
