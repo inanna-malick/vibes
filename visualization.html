@@ -1744,8 +1744,8 @@ all: \${OBJS}
             
             // ===== Y-axis (Error Surface) - Left vertical edge =====
             const yAxisGroup = g.append('g').attr('class', 'y-axis-group');
-            // Position Y-axis completely outside cube bounds (cube X goes 0-3, so position at X = -0.5)
-            const yAxisX = project3D(-0.5, 0, 0).x - 25; // 25px further left from cube edge
+            // Position Y-axis completely to the left in screen coordinates
+            const yAxisX = -300; // Fixed screen X position, far left of visualization
             
             for (let i = 0; i < 4; i++) {
                 const segStartY = project3D(0, -1 + (Math.max(-0.5, i - 0.5) * 4/3), 0).y;
