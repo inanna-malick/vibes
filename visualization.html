@@ -5,6 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VIBES Phenomenological Topology</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-haskell.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-rust.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-ruby.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-swift.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-kotlin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-scala.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -483,6 +499,102 @@
             50% { r: 16; opacity: 1; }
         }
         
+        /* Phenomenology section animation */
+        #phenomenology-section {
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        #phenomenology-section.show {
+            display: block !important;
+        }
+        
+        /* Search panel styles */
+        .search-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05);
+            max-width: 320px;
+            transition: all 0.3s ease;
+        }
+        
+        .search-panel.collapsed {
+            padding: 12px;
+            max-width: 48px;
+            overflow: hidden;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 10px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            transition: all 0.2s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #4488ff;
+            box-shadow: 0 0 0 3px rgba(68, 136, 255, 0.1);
+        }
+        
+        .filter-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+        }
+        
+        .filter-checkbox {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        
+        .filter-checkbox input {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        
+        .filter-checkbox label {
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .search-results {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .vertex-highlight {
+            animation: pulse-highlight 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-highlight {
+            0%, 100% { 
+                filter: drop-shadow(0 0 20px #ff0066) brightness(1.2); 
+                r: 8;
+            }
+            50% { 
+                filter: drop-shadow(0 0 40px #ff0066) brightness(1.4); 
+                r: 10;
+            }
+        }
+        
+        .vertex-dimmed {
+            opacity: 0.3;
+            transition: opacity 0.3s ease;
+        }
+        
         /* Responsive design */
         @media (max-width: 768px) {
             body {
@@ -622,9 +734,67 @@
             <p id="state-coords" style="margin: 0 0 12px 0; font-size: 13px; color: #666; font-family: 'SF Mono', monospace;">Signal: 3, Dependencies: 3, Error: 3</p>
         </div>
         <p id="state-description" style="margin: 0; font-size: 14px; line-height: 1.5; color: #333;">Peak phenomenological state. Every pattern resonates with crystalline clarity.</p>
+        <div id="phenomenology-section" style="margin-top: 12px; display: none;">
+            <div style="padding: 12px; background: rgba(68, 136, 255, 0.05); border-radius: 8px; border-left: 3px solid #4488ff;">
+                <p id="state-phenomenology" style="margin: 0; font-size: 13px; line-height: 1.6; color: #555; font-style: italic;"></p>
+            </div>
+        </div>
+        <div style="margin-top: 12px;">
+            <button id="phenomenology-toggle" onclick="togglePhenomenology()" style="background: none; border: none; color: #4488ff; cursor: pointer; font-size: 13px; padding: 4px 0; text-decoration: underline; text-underline-offset: 2px;">
+                Show phenomenology →
+            </button>
+        </div>
         <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #eee;">
             <button onclick="showCodeExample()" style="width: 100%; padding: 8px 16px; background: #4488ff; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500;">
                 View Code Example →
+            </button>
+        </div>
+    </div>
+    
+    <div class="search-panel" id="search-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="margin: 0; font-size: 16px; font-weight: 600;">Search States</h3>
+            <button onclick="toggleSearchPanel()" style="background: none; border: none; cursor: pointer; padding: 4px; color: #666;">
+                <span id="search-toggle-icon">−</span>
+            </button>
+        </div>
+        <div id="search-content">
+            <input type="text" class="search-input" id="search-input" placeholder="Search by title, description, or emoji..." />
+            
+            <div class="filter-section">
+                <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600;">Filter by Type</h4>
+                <div class="filter-checkbox">
+                    <input type="checkbox" id="filter-transcendent" checked>
+                    <label for="filter-transcendent"><span style="color: #10b981;">●</span> Transcendent (8-9)</label>
+                </div>
+                <div class="filter-checkbox">
+                    <input type="checkbox" id="filter-good" checked>
+                    <label for="filter-good"><span style="color: #84cc16;">●</span> Good (6-7)</label>
+                </div>
+                <div class="filter-checkbox">
+                    <input type="checkbox" id="filter-functional" checked>
+                    <label for="filter-functional"><span style="color: #fbbf24;">●</span> Functional (4-5)</label>
+                </div>
+                <div class="filter-checkbox">
+                    <input type="checkbox" id="filter-degraded" checked>
+                    <label for="filter-degraded"><span style="color: #f59e0b;">●</span> Degraded (2-3)</label>
+                </div>
+                <div class="filter-checkbox">
+                    <input type="checkbox" id="filter-struggling" checked>
+                    <label for="filter-struggling"><span style="color: #ef4444;">●</span> Struggling (1)</label>
+                </div>
+                <div class="filter-checkbox">
+                    <input type="checkbox" id="filter-catastrophic" checked>
+                    <label for="filter-catastrophic"><span style="color: #991b1b;">●</span> Catastrophic (0)</label>
+                </div>
+            </div>
+            
+            <div class="search-results" id="search-results">
+                <span id="search-count">64</span> states shown
+            </div>
+            
+            <button onclick="clearFilters()" style="margin-top: 12px; width: 100%; padding: 8px; background: none; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer; font-size: 13px; color: #666;">
+                Clear all filters
             </button>
         </div>
     </div>
@@ -2260,6 +2430,18 @@ ${description.code.code}
             `);
             
             d3.select('#state-description').text(desc.description);
+            
+            // Update phenomenology data if available
+            if (desc.phenomenology) {
+                d3.select('#state-phenomenology').text(desc.phenomenology);
+                d3.select('#phenomenology-toggle').style('display', 'block');
+            } else {
+                d3.select('#phenomenology-toggle').style('display', 'none');
+            }
+            
+            // Reset phenomenology section visibility
+            d3.select('#phenomenology-section').style('display', 'none');
+            d3.select('#phenomenology-toggle').text('Show phenomenology →');
         }
         
         // Show code example function
@@ -2293,32 +2475,303 @@ ${description.code.code}
                 .style('max-height', '80vh')
                 .style('overflow', 'auto')
                 .style('box-shadow', '0 20px 60px rgba(0, 0, 0, 0.5)')
-                .on('click', function() { d3.event.stopPropagation(); });
+                .on('click', function(event) { event.stopPropagation(); });
             
-            // Add header
+            // Generate unique ID for copy button
+            const copyBtnId = 'copy-btn-' + Date.now();
+            
+            // Add header with copy button
             content.append('div')
                 .style('display', 'flex')
                 .style('justify-content', 'space-between')
                 .style('align-items', 'center')
-                .style('margin-bottom', '16px')
+                .style('margin-bottom', '20px')
                 .html(`
-                    <div style="color: #e0e0e0;">
-                        <h3 style="margin: 0; font-size: 18px;">${desc.emoji} ${desc.title}</h3>
+                    <div style="color: #e0e0e0; flex: 1;">
+                        <h3 style="margin: 0; font-size: 20px;">${desc.emoji} ${desc.title}</h3>
                         <p style="margin: 4px 0 0 0; font-size: 14px; color: #999;">What this state feels like in code:</p>
                     </div>
-                    <button onclick="this.closest('div').parentElement.parentElement.remove()" 
-                            style="background: none; border: none; color: #999; font-size: 24px; cursor: pointer;">×</button>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <button id="${copyBtnId}" 
+                                style="background: #4488ff; border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;">
+                            Copy Code
+                        </button>
+                        <button onclick="this.closest('div').parentElement.parentElement.remove()" 
+                                style="background: none; border: none; color: #999; font-size: 24px; cursor: pointer; line-height: 1;">×</button>
+                    </div>
                 `);
             
-            // Add code
-            content.append('div')
-                .attr('class', 'code-example')
+            // Add descriptions
+            if (desc.description || desc.phenomenology) {
+                const descContainer = content.append('div')
+                    .style('margin-bottom', '20px')
+                    .style('padding', '16px')
+                    .style('background', 'rgba(255, 255, 255, 0.05)')
+                    .style('border-radius', '8px');
+                
+                if (desc.description) {
+                    descContainer.append('p')
+                        .style('margin', '0 0 12px 0')
+                        .style('color', '#e0e0e0')
+                        .style('font-size', '14px')
+                        .style('line-height', '1.6')
+                        .html(`<strong>For Humans:</strong> ${desc.description}`);
+                }
+                
+                if (desc.phenomenology) {
+                    descContainer.append('p')
+                        .style('margin', '0')
+                        .style('color', '#b0b0b0')
+                        .style('font-size', '13px')
+                        .style('font-style', 'italic')
+                        .style('line-height', '1.6')
+                        .html(`<strong>Phenomenology:</strong> ${desc.phenomenology}`);
+                }
+            }
+            
+            // Map language names for Prism
+            const languageMap = {
+                'javascript': 'javascript',
+                'JavaScript': 'javascript',
+                'JavaScript (Legacy)': 'javascript',
+                'python': 'python',
+                'Python': 'python',
+                'haskell': 'haskell',
+                'Haskell': 'haskell',
+                'rust': 'rust',
+                'Rust': 'rust',
+                'typescript': 'typescript',
+                'TypeScript': 'typescript',
+                'c': 'c',
+                'C': 'c',
+                'cpp': 'cpp',
+                'c++': 'cpp',
+                'C++': 'cpp',
+                'java': 'java',
+                'Java': 'java',
+                'go': 'go',
+                'Go': 'go',
+                'ruby': 'ruby',
+                'Ruby': 'ruby',
+                'php': 'php',
+                'PHP': 'php',
+                'swift': 'swift',
+                'Swift': 'swift',
+                'kotlin': 'kotlin',
+                'Kotlin': 'kotlin',
+                'scala': 'scala',
+                'Scala': 'scala',
+                'sql': 'sql',
+                'SQL': 'sql'
+            };
+            
+            const prismLang = languageMap[desc.code.lang] || 'plaintext';
+            
+            // Add code with syntax highlighting
+            const codeContainer = content.append('div')
+                .style('position', 'relative');
+            
+            codeContainer.append('div')
+                .style('background', 'rgba(68, 136, 255, 0.1)')
+                .style('padding', '8px 16px')
+                .style('border-radius', '8px 8px 0 0')
+                .style('font-size', '12px')
+                .style('color', '#4488ff')
+                .style('font-weight', '600')
+                .text(desc.code.lang);
+            
+            const pre = codeContainer.append('pre')
                 .style('margin', '0')
-                .html(`
-                    <div class="code-lang">${desc.code.lang}</div>
-                    <pre style="margin: 0; color: #d4d4d4;">${desc.code.code}</pre>
-                `);
+                .style('background', '#2d2d2d')
+                .style('padding', '16px')
+                .style('border-radius', '0 0 8px 8px')
+                .style('overflow-x', 'auto');
+            
+            const code = pre.append('code')
+                .attr('class', `language-${prismLang}`)
+                .text(desc.code.code);
+            
+            // Apply syntax highlighting
+            Prism.highlightElement(code.node());
+            
+            // Add copy functionality
+            d3.select(`#${copyBtnId}`).on('click', function() {
+                navigator.clipboard.writeText(desc.code.code).then(() => {
+                    const btn = d3.select(this);
+                    const originalText = btn.text();
+                    btn.text('Copied!');
+                    setTimeout(() => btn.text(originalText), 2000);
+                }).catch(err => {
+                    console.error('Failed to copy:', err);
+                    alert('Failed to copy code to clipboard');
+                });
+            });
         };
+        
+        // Toggle phenomenology section
+        window.togglePhenomenology = function() {
+            const section = d3.select('#phenomenology-section');
+            const toggle = d3.select('#phenomenology-toggle');
+            const isVisible = section.style('display') !== 'none';
+            
+            if (isVisible) {
+                section.style('display', 'none');
+                toggle.text('Show phenomenology →');
+            } else {
+                section.style('display', 'block');
+                toggle.text('Hide phenomenology ←');
+            }
+        };
+        
+        // Search and filter functionality
+        let searchState = {
+            query: '',
+            filters: {
+                transcendent: true,
+                good: true,
+                functional: true,
+                degraded: true,
+                struggling: true,
+                catastrophic: true
+            },
+            matchingVertices: new Set()
+        };
+        
+        // Toggle search panel
+        window.toggleSearchPanel = function() {
+            const panel = d3.select('#search-panel');
+            const content = d3.select('#search-content');
+            const icon = d3.select('#search-toggle-icon');
+            const isCollapsed = panel.classed('collapsed');
+            
+            if (isCollapsed) {
+                panel.classed('collapsed', false);
+                content.style('display', 'block');
+                icon.text('−');
+            } else {
+                panel.classed('collapsed', true);
+                content.style('display', 'none');
+                icon.text('+');
+            }
+        };
+        
+        // Clear all filters
+        window.clearFilters = function() {
+            // Reset checkboxes
+            d3.selectAll('.filter-checkbox input').property('checked', true);
+            
+            // Reset search
+            d3.select('#search-input').property('value', '');
+            
+            // Reset state
+            searchState.query = '';
+            Object.keys(searchState.filters).forEach(key => {
+                searchState.filters[key] = true;
+            });
+            
+            // Update display
+            updateSearchResults();
+        };
+        
+        // Calculate state score
+        function getStateScore(signal, dependencies, error) {
+            return signal + dependencies + error;
+        }
+        
+        // Get state category
+        function getStateCategory(score) {
+            if (score >= 8) return 'transcendent';
+            if (score >= 6) return 'good';
+            if (score >= 4) return 'functional';
+            if (score >= 2) return 'degraded';
+            if (score >= 1) return 'struggling';
+            return 'catastrophic';
+        }
+        
+        // Update search results
+        function updateSearchResults() {
+            searchState.matchingVertices.clear();
+            let matchCount = 0;
+            
+            // Check each possible state
+            for (let signal = 0; signal <= 3; signal++) {
+                for (let dependencies = 0; dependencies <= 3; dependencies++) {
+                    for (let error = 0; error <= 3; error++) {
+                        const score = getStateScore(signal, dependencies, error);
+                        const category = getStateCategory(score);
+                        
+                        // Check category filter
+                        if (!searchState.filters[category]) continue;
+                        
+                        // Check search query
+                        if (searchState.query) {
+                            const desc = getStateDescription(signal, dependencies, error);
+                            const searchText = searchState.query.toLowerCase();
+                            const matches = 
+                                desc.emoji.includes(searchText) ||
+                                desc.title.toLowerCase().includes(searchText) ||
+                                desc.description.toLowerCase().includes(searchText) ||
+                                (desc.phenomenology && desc.phenomenology.toLowerCase().includes(searchText)) ||
+                                `${signal}-${dependencies}-${error}`.includes(searchText);
+                            
+                            if (!matches) continue;
+                        }
+                        
+                        searchState.matchingVertices.add(`${signal}-${dependencies}-${error}`);
+                        matchCount++;
+                    }
+                }
+            }
+            
+            // Update count display
+            d3.select('#search-count').text(matchCount);
+            
+            // Update vertex highlighting
+            updateVertexHighlighting();
+        }
+        
+        // Update vertex highlighting based on search
+        function updateVertexHighlighting() {
+            d3.selectAll('.vertex-point').each(function(d) {
+                const vertex = d3.select(this);
+                const key = `${d.signal}-${d.dependencies}-${d.error}`;
+                const isMatch = searchState.matchingVertices.size === 0 || searchState.matchingVertices.has(key);
+                
+                vertex.classed('vertex-highlight', isMatch && searchState.matchingVertices.size > 0 && searchState.matchingVertices.size < 64);
+                vertex.classed('vertex-dimmed', !isMatch && searchState.matchingVertices.size > 0);
+            });
+        }
+        
+        // Initialize search event listeners
+        function initializeSearch() {
+            // Search input with debouncing
+            let searchTimeout;
+            d3.select('#search-input').on('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    searchState.query = this.value;
+                    updateSearchResults();
+                }, 300);
+            });
+            
+            // Filter checkboxes
+            d3.selectAll('.filter-checkbox input').on('change', function() {
+                const category = this.id.replace('filter-', '');
+                searchState.filters[category] = this.checked;
+                updateSearchResults();
+            });
+            
+            // Keyboard shortcut for search (Ctrl+F or Cmd+F)
+            document.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                    e.preventDefault();
+                    d3.select('#search-panel').classed('collapsed', false);
+                    d3.select('#search-content').style('display', 'block');
+                    d3.select('#search-toggle-icon').text('−');
+                    d3.select('#search-input').node().focus();
+                }
+            });
+        }
         
         // Fixed view - no reset needed
         
@@ -2335,6 +2788,9 @@ ${description.code.code}
         
         // Initialize preset buttons
         updatePresetButtons();
+        
+        // Initialize search functionality
+        initializeSearch();
         
         // Subtle parallax effect on mouse movement
         let parallaxEnabled = true;
