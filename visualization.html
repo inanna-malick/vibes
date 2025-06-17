@@ -19,7 +19,11 @@
         }
         
         svg {
-            cursor: crosshair;
+            cursor: grab;
+        }
+        
+        svg:active {
+            cursor: grabbing;
         }
         
         .surface-path {
@@ -132,20 +136,145 @@
             font-size: 24px;
         }
         
-        select {
-            font-family: 'SF Mono', 'Consolas', 'Courier New', monospace;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background: white;
+        /* Slider styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
             cursor: pointer;
         }
         
-        select:hover {
-            border-color: #4488ff;
+        input[type="range"]::-webkit-slider-track {
+            background: #ddd;
+            height: 8px;
+            border-radius: 4px;
+        }
+        
+        input[type="range"]::-moz-range-track {
+            background: #ddd;
+            height: 8px;
+            border-radius: 4px;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #4488ff;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            margin-top: -6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            background: #4488ff;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+        }
+        
+        input[type="range"]:hover::-webkit-slider-thumb {
+            background: #3377ee;
+            transform: scale(1.1);
+        }
+        
+        input[type="range"]:hover::-moz-range-thumb {
+            background: #3377ee;
+            transform: scale(1.1);
+        }
+        
+        .preset-btn:hover {
+            background: #f0f0f0 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
         #selected-indicator {
             pointer-events: none;
+            stroke-width: 4;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { r: 12; opacity: 0.8; }
+            50% { r: 16; opacity: 1; }
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            body {
+                font-size: 14px;
+            }
+            
+            svg {
+                width: 100vw !important;
+                height: 60vh !important;
+            }
+            
+            .info-panel {
+                position: relative;
+                top: auto;
+                left: auto;
+                right: auto;
+                margin: 10px;
+                max-width: none;
+            }
+            
+            .state-description {
+                position: relative;
+                bottom: auto;
+                left: auto;
+                right: auto;
+                margin: 10px;
+                max-width: none;
+                max-height: 300px;
+            }
+            
+            .legend {
+                position: relative;
+                bottom: auto;
+                right: auto;
+                margin: 10px;
+                font-size: 11px;
+            }
+            
+            .slider-controls {
+                padding: 15px !important;
+            }
+            
+            .preset-btn {
+                font-size: 12px !important;
+                padding: 6px 12px !important;
+            }
+            
+            .code-example {
+                font-size: 10px !important;
+                max-height: 200px;
+                overflow-y: auto;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .info-panel h2 {
+                font-size: 20px;
+            }
+            
+            .state-description h3 {
+                font-size: 18px;
+            }
+            
+            .emoji-large {
+                font-size: 20px;
+            }
+            
+            .legend {
+                font-size: 10px;
+            }
         }
     </style>
 </head>
@@ -168,73 +297,139 @@
     
     <div class="state-description" id="state-description">
         <h3>Select coordinates to explore</h3>
-        <div style="margin-top: 15px;">
-            <div style="margin-bottom: 15px;">
-                <label style="display: inline-block; width: 120px;"><strong>Signal:</strong></label>
-                <select id="signal-select" style="font-size: 20px; padding: 5px;">
-                    <option value="0">0 - 🙈</option>
-                    <option value="1">1 - 👓</option>
-                    <option value="2">2 - 🔍</option>
-                    <option value="3" selected>3 - 🔬</option>
-                </select>
+        <div class="slider-controls" style="margin-top: 20px; background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 8px;">
+            <div class="slider-group" style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px;"><strong>Signal Density:</strong></label>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <span class="emoji-label" style="font-size: 20px;">🙈</span>
+                    <input type="range" id="signal-slider" min="0" max="3" value="3" step="1" 
+                           style="flex: 1; height: 8px; cursor: pointer;">
+                    <span class="emoji-label" style="font-size: 20px;">🔬</span>
+                    <span id="signal-value" style="font-size: 24px; min-width: 40px; text-align: center;">🔬</span>
+                </div>
+                <div class="tick-marks" style="display: flex; justify-content: space-between; margin-top: 5px; padding: 0 35px;">
+                    <span style="font-size: 11px;">0</span>
+                    <span style="font-size: 11px;">1</span>
+                    <span style="font-size: 11px;">2</span>
+                    <span style="font-size: 11px;">3</span>
+                </div>
             </div>
-            <div style="margin-bottom: 15px;">
-                <label style="display: inline-block; width: 120px;"><strong>Dependencies:</strong></label>
-                <select id="dependency-select" style="font-size: 20px; padding: 5px;">
-                    <option value="0">0 - 🌀</option>
-                    <option value="1">1 - 🧶</option>
-                    <option value="2">2 - 🪢</option>
-                    <option value="3" selected>3 - 🎀</option>
-                </select>
+            <div class="slider-group" style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px;"><strong>Dependencies:</strong></label>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <span class="emoji-label" style="font-size: 20px;">🌀</span>
+                    <input type="range" id="dependency-slider" min="0" max="3" value="3" step="1"
+                           style="flex: 1; height: 8px; cursor: pointer;">
+                    <span class="emoji-label" style="font-size: 20px;">🎀</span>
+                    <span id="dependency-value" style="font-size: 24px; min-width: 40px; text-align: center;">🎀</span>
+                </div>
+                <div class="tick-marks" style="display: flex; justify-content: space-between; margin-top: 5px; padding: 0 35px;">
+                    <span style="font-size: 11px;">0</span>
+                    <span style="font-size: 11px;">1</span>
+                    <span style="font-size: 11px;">2</span>
+                    <span style="font-size: 11px;">3</span>
+                </div>
             </div>
-            <div style="margin-bottom: 15px;">
-                <label style="display: inline-block; width: 120px;"><strong>Error:</strong></label>
-                <select id="error-select" style="font-size: 20px; padding: 5px;">
-                    <option value="0">0 - 🌊</option>
-                    <option value="1">1 - 💧</option>
-                    <option value="2">2 - 🧊</option>
-                    <option value="3" selected>3 - 💠</option>
-                </select>
+            <div class="slider-group" style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px;"><strong>Error Surface:</strong></label>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <span class="emoji-label" style="font-size: 20px;">🌊</span>
+                    <input type="range" id="error-slider" min="0" max="3" value="3" step="1"
+                           style="flex: 1; height: 8px; cursor: pointer;">
+                    <span class="emoji-label" style="font-size: 20px;">💠</span>
+                    <span id="error-value" style="font-size: 24px; min-width: 40px; text-align: center;">💠</span>
+                </div>
+                <div class="tick-marks" style="display: flex; justify-content: space-between; margin-top: 5px; padding: 0 35px;">
+                    <span style="font-size: 11px;">0</span>
+                    <span style="font-size: 11px;">1</span>
+                    <span style="font-size: 11px;">2</span>
+                    <span style="font-size: 11px;">3</span>
+                </div>
             </div>
         </div>
+        <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="preset-btn" onclick="setPreset(3,3,3)" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #ddd; background: white; cursor: pointer;">
+                🎯 Peak Experience
+            </button>
+            <button class="preset-btn" onclick="setPreset(0,0,0)" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #ddd; background: white; cursor: pointer;">
+                💀 Worst Case
+            </button>
+            <button class="preset-btn" onclick="setPreset(2,2,2)" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #ddd; background: white; cursor: pointer;">
+                ⚖️ Functional
+            </button>
+            <button class="preset-btn" onclick="setPreset(2,1,2)" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #ddd; background: white; cursor: pointer;">
+                ✨ Sweet Spot
+            </button>
+            <button class="preset-btn" onclick="resetView()" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #ddd; background: white; cursor: pointer;">
+                🔄 Reset View
+            </button>
+        </div>
         <div id="state-details" style="margin-top: 20px;">
-            <p>Use the dropdowns above to explore any point in VIBES space.</p>
+            <p>Use the sliders above to explore any point in VIBES space.</p>
         </div>
     </div>
     
-    <div class="legend">
-        <div><strong>Coordinates:</strong></div>
-        <div>X: Signal (0=🙈 to 3=🔬)</div>
-        <div>Y: Intensity ↑</div>
-        <div>Z: Dependencies (0=🌀 to 3=🎀)</div>
-        <div style="margin-top: 10px; font-size: 11px;">
-            <div>Error shown via Y offset</div>
-            <div>(0=🌊 to 3=💠)</div>
-        </div>
-        <div style="margin-top: 15px; border-top: 1px solid #ddd; padding-top: 10px;">
-            <div><strong>Surface Layers:</strong></div>
-            <div style="font-size: 12px; margin-top: 5px;">
-                <div><span style="color: #10b981;">●</span> Primary: Base cognitive state</div>
-                <div><span style="color: #991b1b;">●</span> Error: Cascade zones</div>
-                <div><span style="color: #6d28d9;">●</span> Resonance: Harmony points</div>
-            </div>
-        </div>
+    <div class="legend" style="font-family: 'SF Mono', 'Consolas', monospace; font-size: 12px; white-space: pre;">
+        <div style="font-weight: bold; margin-bottom: 8px;">LEGEND
+━━━━━━━━━━━━━━━━━━━━━━</div>
+        
+        <div style="margin-bottom: 12px;">SURFACES
+┌─────────────────────┐
+│ <span style="color: #10b981;">████</span> Primary        │
+│      Cognitive State│
+│                     │
+│ <span style="color: #991b1b;">████</span> Error Cascades │
+│      (danger zones) │
+│                     │  
+│ <span style="color: #6d28d9;">████</span> Resonance      │
+│      Harmonics      │
+└─────────────────────┘</div>
+
+        <div style="margin-bottom: 12px;">AXES
+Signal Density
+🙈 ← → 🔬
+(blind)  (crystal)
+
+Dependencies  
+🌀 ← → 🎀
+(chaos)  (elegant)
+
+Error Handling
+🌊 ← → 💠  
+(flood)  (solid)
+
+HEIGHT = Intensity
+↑ High energy states
+↓ Low energy states</div>
+
+        <div>VERTEX COLORS
+<span style="color: #10b981;">●</span> Transcendent (>2.7)
+<span style="color: #84cc16;">●</span> Good (>2.0)
+<span style="color: #fbbf24;">●</span> Functional (>1.3)
+<span style="color: #f59e0b;">●</span> Degraded (>0.7)
+<span style="color: #ef4444;">●</span> Struggling (>0)
+<span style="color: #991b1b;">●</span> Catastrophic</div>
     </div>
     
     <script>
         try {
         // Configuration
-        const width = 1200;
-        const height = 700;
-        const scale = 80;
+        const baseWidth = 1200;
+        const baseHeight = 700;
+        const width = Math.min(baseWidth, window.innerWidth);
+        const height = Math.min(baseHeight, window.innerHeight * 0.7);
+        const scale = Math.min(80, width / 15);
         const gridSize = 3; // 0-3 for each axis (4 states)
         
-        // Fixed isometric view angles
-        const rotationY = Math.PI / 4.5;
-        const rotationX = -Math.PI / 5.5;
+        // Isometric view angles (mutable for camera controls)
+        let rotationY = Math.PI / 4.5;
+        let rotationX = -Math.PI / 5.5;
         
         // SVG setup
-        const svg = d3.select('#visualization');
+        const svg = d3.select('#visualization')
+            .attr('width', width)
+            .attr('height', height)
+            .attr('viewBox', `0 0 ${width} ${height}`);
         const g = svg.append('g')
             .attr('transform', `translate(${width/2}, ${height/2})`);
         
@@ -1131,6 +1326,66 @@ all: \${OBJS}
             
             drawVertices();
             drawAxes();
+            drawSurfaceLabels();
+        }
+        
+        function drawSurfaceLabels() {
+            // Remove old labels
+            g.selectAll('.surface-label').remove();
+            
+            // Define label positions and text
+            const labels = [
+                {
+                    text: "Primary Cognitive State",
+                    x: 1.5,
+                    y: primarySurface(1.5, 1.5) + 0.5,
+                    z: 1.5,
+                    color: '#10b981'
+                },
+                {
+                    text: "Error Cascade Zones",
+                    x: 0.5,
+                    y: errorSurface(0.5, 0.5) + 2.5,
+                    z: 0.5,
+                    color: '#991b1b'
+                },
+                {
+                    text: "Resonance Harmonics",
+                    x: 2,
+                    y: resonanceSurface(2, 1) + 1.5,
+                    z: 1,
+                    color: '#6d28d9'
+                }
+            ];
+            
+            // Add labels
+            labels.forEach(label => {
+                const projected = project3D(label.x, label.y, label.z);
+                
+                const labelGroup = g.append('g')
+                    .attr('class', 'surface-label')
+                    .attr('transform', `translate(${projected.x}, ${projected.y})`);
+                
+                // Background for readability
+                labelGroup.append('rect')
+                    .attr('x', -60)
+                    .attr('y', -10)
+                    .attr('width', 120)
+                    .attr('height', 20)
+                    .attr('fill', 'rgba(255, 255, 255, 0.9)')
+                    .attr('stroke', label.color)
+                    .attr('stroke-width', 1)
+                    .attr('rx', 3);
+                
+                // Label text
+                labelGroup.append('text')
+                    .attr('text-anchor', 'middle')
+                    .attr('dy', 4)
+                    .attr('fill', label.color)
+                    .attr('font-size', '12px')
+                    .attr('font-weight', 'bold')
+                    .text(label.text);
+            });
         }
         
         function drawCubeWireframe() {
@@ -1230,23 +1485,23 @@ all: \${OBJS}
                 .attr('cy', d => d.projected.y)
                 .attr('r', 4)
                 .attr('fill', d => {
-                    // Color based on overall VIBES state quality
+                    // Color based on overall VIBES state quality per spec
                     const totalScore = (d.signal + d.dependencies + d.error) / 9; // Normalize to 0-1
-                    if (totalScore > 0.8) return '#10b981'; // Emerald - transcendent
-                    if (totalScore > 0.65) return '#84cc16'; // Lime - good
-                    if (totalScore > 0.5) return '#fbbf24'; // Amber - functional
-                    if (totalScore > 0.35) return '#f59e0b'; // Orange - degraded
-                    if (totalScore > 0.2) return '#ef4444'; // Red - struggling
-                    return '#991b1b'; // Dark red - catastrophic
+                    if (totalScore > 0.9) return '#10b981';  // Transcendent (>2.7/3)
+                    if (totalScore > 0.67) return '#84cc16'; // Good (>2.0/3)
+                    if (totalScore > 0.43) return '#fbbf24'; // Functional (>1.3/3)
+                    if (totalScore > 0.23) return '#f59e0b'; // Degraded (>0.7/3)
+                    if (totalScore > 0) return '#ef4444';    // Struggling (>0)
+                    return '#991b1b'; // Catastrophic (≤0)
                 })
                 .attr('stroke', '#fff')
                 .attr('stroke-width', 2)
                 .on('click', function(event, d) {
                     showStateDescription(d);
-                    // Update dropdowns
-                    d3.select('#signal-select').property('value', d.signal);
-                    d3.select('#dependency-select').property('value', d.dependencies);
-                    d3.select('#error-select').property('value', d.error);
+                    // Update sliders
+                    d3.select('#signal-slider').property('value', d.signal);
+                    d3.select('#dependency-slider').property('value', d.dependencies);
+                    d3.select('#error-slider').property('value', d.error);
                     updateSelectedState();
                 })
                 .on('mouseover', function(event, d) {
@@ -1405,18 +1660,23 @@ ${desc.code.code}
         
         function updateSelectedState() {
             // Check if DOM elements exist before trying to access them
-            const signalSelect = d3.select('#signal-select');
-            const dependencySelect = d3.select('#dependency-select');
-            const errorSelect = d3.select('#error-select');
+            const signalSlider = d3.select('#signal-slider');
+            const dependencySlider = d3.select('#dependency-slider');
+            const errorSlider = d3.select('#error-slider');
             
-            if (signalSelect.empty() || dependencySelect.empty() || errorSelect.empty()) {
+            if (signalSlider.empty() || dependencySlider.empty() || errorSlider.empty()) {
                 // DOM not ready yet, skip update
                 return;
             }
             
-            const signal = parseInt(signalSelect.property('value'));
-            const dependencies = parseInt(dependencySelect.property('value'));
-            const error = parseInt(errorSelect.property('value'));
+            const signal = parseInt(signalSlider.property('value'));
+            const dependencies = parseInt(dependencySlider.property('value'));
+            const error = parseInt(errorSlider.property('value'));
+            
+            // Update emoji displays
+            d3.select('#signal-value').text(signalEmojis[signal]);
+            d3.select('#dependency-value').text(dependencyEmojis[dependencies]);
+            d3.select('#error-value').text(errorEmojis[error]);
             
             // Calculate position for selected point
             const errorOffset = error * 0.5;
@@ -1509,10 +1769,64 @@ ${description.code.code}
             d3.select('#state-details').html(html);
         }
         
-        // Set up event listeners for coordinate selectors
-        d3.select('#signal-select').on('change', updateSelectedState);
-        d3.select('#dependency-select').on('change', updateSelectedState);
-        d3.select('#error-select').on('change', updateSelectedState);
+        // Set up event listeners for sliders
+        d3.select('#signal-slider').on('input', updateSelectedState);
+        d3.select('#dependency-slider').on('input', updateSelectedState);
+        d3.select('#error-slider').on('input', updateSelectedState);
+        
+        // Preset and view control functions
+        window.setPreset = function(s, d, e) {
+            d3.select('#signal-slider').property('value', s);
+            d3.select('#dependency-slider').property('value', d);
+            d3.select('#error-slider').property('value', e);
+            updateSelectedState();
+        };
+        
+        window.resetView = function() {
+            rotationY = Math.PI / 4.5;
+            rotationX = -Math.PI / 5.5;
+            drawSurfaces();
+        };
+        
+        // Mouse drag controls for camera
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let startRotationY = rotationY;
+        let startRotationX = rotationX;
+        
+        svg.on('mousedown', function(event) {
+            if (event.target.tagName === 'svg' || event.target.tagName === 'path' || event.target.tagName === 'line') {
+                isDragging = true;
+                dragStartX = event.clientX;
+                dragStartY = event.clientY;
+                startRotationY = rotationY;
+                startRotationX = rotationX;
+                svg.style('cursor', 'grabbing');
+            }
+        });
+        
+        svg.on('mousemove', function(event) {
+            if (!isDragging) return;
+            
+            const deltaX = event.clientX - dragStartX;
+            const deltaY = event.clientY - dragStartY;
+            
+            rotationY = startRotationY + deltaX * 0.01;
+            rotationX = Math.max(-Math.PI/2, Math.min(Math.PI/2, startRotationX + deltaY * 0.01));
+            
+            drawSurfaces();
+        });
+        
+        svg.on('mouseup', function() {
+            isDragging = false;
+            svg.style('cursor', 'grab');
+        });
+        
+        svg.on('mouseleave', function() {
+            isDragging = false;
+            svg.style('cursor', 'grab');
+        });
         
         // Initial draw
         drawSurfaces();
