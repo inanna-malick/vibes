@@ -80,13 +80,21 @@
         }
         
         .state-card {
+            background: rgba(255, 255, 255, 0.85) !important;
             backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .state-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            transform: translateY(-4px);
+            box-shadow: 
+                0 12px 48px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.9) !important;
         }
         
         .code-example {
@@ -126,6 +134,28 @@
         h2 {
             margin-top: 0;
             font-size: 24px;
+        }
+        
+        /* Enhanced typography hierarchy */
+        #state-title {
+            font-size: 32px !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            font-weight: 700 !important;
+        }
+        
+        #state-coords {
+            font-family: 'SF Mono', 'Consolas', 'Courier New', monospace !important;
+            font-size: 14px !important;
+            color: #555 !important;
+        }
+        
+        .coord-signal { color: #dc2626; font-weight: 600; }
+        .coord-deps { color: #7c3aed; font-weight: 600; }
+        .coord-error { color: #059669; font-weight: 600; }
+        
+        #state-description {
+            line-height: 1.6 !important;
+            font-size: 15px !important;
         }
         
         .axis-rail {
@@ -288,10 +318,37 @@
             transform: scale(1.1);
         }
         
+        .preset-btn {
+            padding: 12px 16px !important;
+            background: rgba(255, 255, 255, 0.9) !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+            border-radius: 10px !important;
+            cursor: pointer !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            backdrop-filter: blur(8px) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+        }
+        
         .preset-btn:hover {
-            background: #f0f0f0 !important;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.95) !important;
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15) !important;
+            border-color: rgba(68, 136, 255, 0.3) !important;
+        }
+        
+        .preset-btn:active {
+            transform: translateY(0) scale(1.02);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+        }
+        
+        .preset-btn.active {
+            background: rgba(68, 136, 255, 0.1) !important;
+            border-color: #4488ff !important;
+            box-shadow: 
+                0 4px 12px rgba(68, 136, 255, 0.2),
+                inset 0 0 0 2px rgba(68, 136, 255, 0.2) !important;
         }
         
         #selected-indicator {
@@ -411,21 +468,17 @@
         </div>
     </div>
     
-    <div class="preset-buttons" style="position: absolute; bottom: 20px; left: 20px; display: flex; gap: 8px;">
-        <button onclick="updateAxisValue('signal', 3); updateAxisValue('dependencies', 3); updateAxisValue('error', 3);" 
-                style="padding: 8px 12px; background: rgba(255, 255, 255, 0.9); border: 1px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 13px;">
+    <div class="preset-buttons" style="position: absolute; bottom: 20px; left: 20px; display: flex; gap: 12px;">
+        <button class="preset-btn" id="preset-peak" onclick="setPreset('peak', 3, 3, 3);">
             🎯 Peak
         </button>
-        <button onclick="updateAxisValue('signal', 0); updateAxisValue('dependencies', 0); updateAxisValue('error', 0);" 
-                style="padding: 8px 12px; background: rgba(255, 255, 255, 0.9); border: 1px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 13px;">
+        <button class="preset-btn" id="preset-chaos" onclick="setPreset('chaos', 0, 0, 0);">
             💀 Chaos
         </button>
-        <button onclick="updateAxisValue('signal', 2); updateAxisValue('dependencies', 2); updateAxisValue('error', 2);" 
-                style="padding: 8px 12px; background: rgba(255, 255, 255, 0.9); border: 1px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 13px;">
+        <button class="preset-btn" id="preset-balance" onclick="setPreset('balance', 2, 2, 2);">
             ⚖️ Balance
         </button>
-        <button onclick="updateAxisValue('signal', 2); updateAxisValue('dependencies', 1); updateAxisValue('error', 2);" 
-                style="padding: 8px 12px; background: rgba(255, 255, 255, 0.9); border: 1px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 13px;">
+        <button class="preset-btn" id="preset-sweet" onclick="setPreset('sweet', 2, 1, 2);">
             ✨ Sweet
         </button>
     </div>
@@ -2402,6 +2455,43 @@ ${description.code.code}
             updateStateDisplay();
             drawAxes(); // Redraw axes to update orb positions
             drawProjections(); // Update projection lines
+            updatePresetButtons(); // Update active preset button
+        }
+        
+        // Set preset with visual feedback
+        window.setPreset = function(presetName, signal, deps, error) {
+            currentState.signal = signal;
+            currentState.dependencies = deps;
+            currentState.error = error;
+            
+            updateStateDisplay();
+            drawAxes();
+            drawProjections();
+            
+            // Update active button
+            d3.selectAll('.preset-btn').classed('active', false);
+            d3.select(`#preset-${presetName}`).classed('active', true);
+        }
+        
+        // Update preset button active states based on current state
+        function updatePresetButtons() {
+            const presets = [
+                { id: 'preset-peak', signal: 3, deps: 3, error: 3 },
+                { id: 'preset-chaos', signal: 0, deps: 0, error: 0 },
+                { id: 'preset-balance', signal: 2, deps: 2, error: 2 },
+                { id: 'preset-sweet', signal: 2, deps: 1, error: 2 }
+            ];
+            
+            d3.selectAll('.preset-btn').classed('active', false);
+            
+            // Check if current state matches any preset
+            presets.forEach(preset => {
+                if (currentState.signal === preset.signal && 
+                    currentState.dependencies === preset.deps && 
+                    currentState.error === preset.error) {
+                    d3.select(`#${preset.id}`).classed('active', true);
+                }
+            });
         }
         
         // Update state display
@@ -2410,7 +2500,14 @@ ${description.code.code}
             
             d3.select('#state-emoji').text(desc.emoji);
             d3.select('#state-title').text(desc.title);
-            d3.select('#state-coords').text(`Signal: ${currentState.signal}, Dependencies: ${currentState.dependencies}, Error: ${currentState.error}`);
+            
+            // Color-coded coordinates
+            d3.select('#state-coords').html(`
+                <span class="coord-signal">Signal: ${currentState.signal}</span>, 
+                <span class="coord-deps">Dependencies: ${currentState.dependencies}</span>, 
+                <span class="coord-error">Error: ${currentState.error}</span>
+            `);
+            
             d3.select('#state-description').text(desc.description);
         }
         
@@ -2481,6 +2578,9 @@ ${description.code.code}
         
         // Initialize state display
         updateStateDisplay();
+        
+        // Initialize preset buttons
+        updatePresetButtons();
         
         } catch (error) {
             console.error('Visualization error:', error);
