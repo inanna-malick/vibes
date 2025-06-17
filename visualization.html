@@ -21,6 +21,33 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-swift.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-kotlin.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-scala.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-clojure.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-elixir.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-elm.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-erlang.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-perl.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-julia.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-scheme.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-ocaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-nim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-nix.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-zig.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-lisp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-prolog.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-ada.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-apl.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-coq.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-verilog.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-makefile.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-regex.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-graphql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-brainfuck.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-clike.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -593,6 +620,48 @@
         .vertex-dimmed {
             opacity: 0.3;
             transition: opacity 0.3s ease;
+        }
+        
+        /* Prism.js theme overrides */
+        pre[class*="language-"] {
+            background: #2d2d2d !important;
+            margin: 0 !important;
+        }
+        
+        code[class*="language-"] {
+            background: none !important;
+            text-shadow: none !important;
+            font-family: 'SF Mono', 'Consolas', 'Monaco', 'Andale Mono', 'Ubuntu Mono', monospace !important;
+            font-size: 13px !important;
+            line-height: 1.5 !important;
+        }
+        
+        .token.comment {
+            color: #6c7680 !important;
+        }
+        
+        .token.string {
+            color: #a8e068 !important;
+        }
+        
+        .token.keyword {
+            color: #cc7832 !important;
+        }
+        
+        .token.function {
+            color: #52a8ff !important;
+        }
+        
+        .token.number {
+            color: #6897bb !important;
+        }
+        
+        .token.operator {
+            color: #cc7832 !important;
+        }
+        
+        .token.class-name {
+            color: #ffc66d !important;
         }
         
         /* Responsive design */
@@ -2529,43 +2598,90 @@ ${description.code.code}
                 }
             }
             
-            // Map language names for Prism
+            // Map language names for Prism (normalized to lowercase)
             const languageMap = {
                 'javascript': 'javascript',
-                'JavaScript': 'javascript',
-                'JavaScript (Legacy)': 'javascript',
+                'javascript (legacy)': 'javascript',
                 'python': 'python',
-                'Python': 'python',
                 'haskell': 'haskell',
-                'Haskell': 'haskell',
                 'rust': 'rust',
-                'Rust': 'rust',
                 'typescript': 'typescript',
-                'TypeScript': 'typescript',
                 'c': 'c',
-                'C': 'c',
                 'cpp': 'cpp',
                 'c++': 'cpp',
-                'C++': 'cpp',
                 'java': 'java',
-                'Java': 'java',
                 'go': 'go',
-                'Go': 'go',
                 'ruby': 'ruby',
-                'Ruby': 'ruby',
                 'php': 'php',
-                'PHP': 'php',
+                'php (wordpress style)': 'php',
                 'swift': 'swift',
-                'Swift': 'swift',
                 'kotlin': 'kotlin',
-                'Kotlin': 'kotlin',
                 'scala': 'scala',
-                'Scala': 'scala',
                 'sql': 'sql',
-                'SQL': 'sql'
+                'bash': 'bash',
+                'yaml': 'yaml',
+                'perl': 'perl',
+                'perl (golfed)': 'perl',
+                'css': 'css',
+                'clojure': 'clojure',
+                'elixir': 'elixir',
+                'elm': 'elm',
+                'erlang': 'erlang',
+                'julia': 'julia',
+                'scheme': 'scheme',
+                'ocaml': 'ocaml',
+                'nim': 'nim',
+                'nix': 'nix',
+                'nix expression': 'nix',
+                'zig': 'zig',
+                'assembly': 'asm6502',
+                'lisp': 'lisp',
+                'prolog': 'prolog',
+                'ada': 'ada',
+                'agda': 'haskell', // Close enough
+                'apl': 'apl',
+                'coq': 'coq',
+                'idris': 'haskell', // Close enough
+                'lean': 'haskell', // Close enough
+                'mercury': 'prolog', // Close enough
+                'purescript': 'haskell', // Close enough
+                'raku': 'perl', // perl 6
+                'verilog': 'verilog',
+                'forth': 'forth',
+                'makefile': 'makefile',
+                'make': 'makefile',
+                'makefile (bsd vs gnu)': 'makefile',
+                'docker compose': 'yaml',
+                'kubernetes yaml': 'yaml',
+                'enterprise java xml config': 'xml',
+                'brainfuck': 'brainfuck',
+                'category theory notation': 'haskell',
+                'monad transformers': 'haskell',
+                'template metaprogramming': 'cpp',
+                'regex': 'regex',
+                'graphql (circular)': 'graphql',
+                'spring annotations': 'java',
+                'java (spring boot)': 'java',
+                'javascript (rxjs)': 'javascript',
+                'javascript (redux)': 'javascript',
+                'react hooks': 'javascript',
+                'node.js callback hell': 'javascript',
+                'promise chains': 'javascript',
+                'async/await (failing)': 'javascript',
+                'minified javascript': 'javascript',
+                'concurrent hashmap': 'java',
+                'sql (cascading deletes)': 'sql',
+                'css specificity war': 'css',
+                'haskell (melting perfection)': 'haskell',
+                'apl (melting perfection)': 'apl',
+                'prolog (infinite backtracking)': 'prolog',
+                'dhall': 'haskell',
+                'bash one-liner': 'bash',
+                'c with macros': 'c',
+                'go (with goroutine leak)': 'go'
             };
             
-            const prismLang = languageMap[desc.code.lang] || 'plaintext';
+            const prismLang = languageMap[desc.code.lang.toLowerCase()] || 'clike';
             
             // Add code with syntax highlighting
             const codeContainer = content.append('div')
@@ -2591,8 +2707,12 @@ ${description.code.code}
                 .attr('class', `language-${prismLang}`)
                 .text(desc.code.code);
             
-            // Apply syntax highlighting
-            Prism.highlightElement(code.node());
+            // Apply syntax highlighting after a brief delay to ensure DOM is ready
+            setTimeout(() => {
+                if (typeof Prism !== 'undefined') {
+                    Prism.highlightElement(code.node());
+                }
+            }, 10);
             
             // Add copy functionality
             d3.select(`#${copyBtnId}`).on('click', function() {
