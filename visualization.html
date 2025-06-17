@@ -380,6 +380,65 @@
             transform: scale(1.1);
         }
         
+        /* State constellation mini-map */
+        .state-constellation {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 200px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            padding: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            z-index: 100;
+        }
+        
+        .state-constellation::before {
+            content: 'STATE MAP';
+            position: absolute;
+            top: 8px;
+            left: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: #666;
+            font-family: 'SF Mono', monospace;
+        }
+        
+        #constellation-svg {
+            margin-top: 15px;
+        }
+        
+        .constellation-trail {
+            fill: none;
+            stroke: #4488ff;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            opacity: 0.3;
+        }
+        
+        .constellation-point {
+            fill: #4488ff;
+            stroke: white;
+            stroke-width: 2;
+        }
+        
+        .constellation-current {
+            fill: #ffaa00;
+            stroke: white;
+            stroke-width: 3;
+            filter: drop-shadow(0 0 5px #ffaa00);
+        }
+        
+        .constellation-heat {
+            fill: #ff6b6b;
+            opacity: 0.1;
+        }
+        
         .preset-btn {
             padding: 12px 16px !important;
             background: rgba(255, 255, 255, 0.9) !important;
@@ -585,6 +644,10 @@
         </button>
     </div>
     
+    <div class="state-constellation" id="state-constellation">
+        <svg id="constellation-svg" width="200" height="150"></svg>
+    </div>
+    
     <div class="legend" style="font-family: 'SF Mono', 'Consolas', monospace; font-size: 12px; white-space: pre;">
         <div style="font-weight: bold; margin-bottom: 8px;">LEGEND
 ━━━━━━━━━━━━━━━━━━━━━━</div>
@@ -687,12 +750,17 @@ HEIGHT = Intensity
             .attr('in2', 'SourceGraphic');
         
         const g = svg.append('g')
-            .attr('transform', `translate(${width/2}, ${height/2 + 60})`);
+            .attr('transform', `translate(${width/2}, ${height/2 + 120})`);
         
         // Extract emoji mappings from vibesData - reversed so 3 is best
         const signalEmojis = vibesData.dimensions.signalDensity.levels;
         const dependencyEmojis = vibesData.dimensions.dependencies.levels;
         const errorEmojis = vibesData.dimensions.errorSurface.levels;
+        
+        // State history for constellation
+        const stateHistory = [];
+        const stateFrequency = {};
+        let stateHistoryMax = 20;
         
         // Current state values
         let currentState = {
@@ -1217,7 +1285,12 @@ HEIGHT = Intensity
             // drawVertices(); // Removed - no more dots
             drawAxes();
             drawProjections();
+            drawPhenomenologicalTerritories();
+            drawLivingAnnotations();
             // drawSurfaceLabels(); // Removed - too cluttered
+            
+            // Update constellation after drawing
+            updateConstellation();
         }
         
         function drawProjections() {
@@ -1436,9 +1509,76 @@ HEIGHT = Intensity
                 // Vertices removed - no click handlers needed
                 .on('mouseover', function(event, d) {
                     d3.select(this).attr('r', 6);
+                    
+                    // Show code hint on hover
+                    const hintGroup = g.append('g')
+                        .attr('class', 'code-hint-group')
+                        .attr('transform', `translate(${d.projected.x + 10}, ${d.projected.y - 10})`);
+                    
+                    // Background rect
+                    const hintRect = hintGroup.append('rect')
+                        .attr('x', 0)
+                        .attr('y', -20)
+                        .attr('width', 180)
+                        .attr('height', 30)
+                        .attr('rx', 4)
+                        .attr('fill', 'rgba(255, 255, 255, 0.95)')
+                        .attr('stroke', 'rgba(0, 0, 0, 0.1)')
+                        .attr('stroke-width', 1);
+                    
+                    // Check if code exists for this state
+                    const stateKey = `${d.signal}-${d.dependencies}-${d.error}`;
+                    const codeExample = codeExamples[stateKey];
+                    
+                    if (codeExample) {
+                        // Language icon
+                        const langMap = {
+                            haskell: 'hs',
+                            javascript: 'js',
+                            python: 'py',
+                            java: 'java',
+                            rust: 'rs',
+                            clojure: 'clj',
+                            go: 'go',
+                            typescript: 'ts'
+                        };
+                        
+                        hintGroup.append('text')
+                            .attr('x', 10)
+                            .attr('y', 0)
+                            .style('font-size', '11px')
+                            .style('font-weight', 'bold')
+                            .style('fill', '#4488ff')
+                            .text(langMap[codeExample.language] || codeExample.language);
+                        
+                        // Code preview (first line or snippet)
+                        const codeLines = codeExample.code.split('\n');
+                        const preview = codeLines[0].length > 20 ? 
+                            codeLines[0].substring(0, 20) + '...' : 
+                            codeLines[0];
+                        
+                        hintGroup.append('text')
+                            .attr('x', 40)
+                            .attr('y', 0)
+                            .style('font-size', '11px')
+                            .style('font-family', 'monospace')
+                            .style('fill', '#666')
+                            .text(preview);
+                    } else {
+                        hintGroup.append('text')
+                            .attr('x', 10)
+                            .attr('y', 0)
+                            .style('font-size', '11px')
+                            .style('fill', '#999')
+                            .text('Click for details');
+                    }
                 })
                 .on('mouseout', function(event, d) {
                     d3.select(this).attr('r', 4);
+                    g.selectAll('.code-hint-group').remove();
+                })
+                .on('click', function(event, d) {
+                    showCodeModal(d.signal, d.dependencies, d.error);
                 });
         }
         
@@ -2184,6 +2324,9 @@ ${description.code.code}
         
         // Fixed isometric view - no camera controls
         
+        // Initialize constellation before first draw
+        initializeConstellation();
+        
         // Initial draw
         drawSurfaces();
         
@@ -2215,6 +2358,362 @@ ${description.code.code}
         // Disable parallax on small screens for performance
         if (window.innerWidth < 768) {
             parallaxEnabled = false;
+        }
+        
+        // Initialize constellation mini-map
+        function initializeConstellation() {
+            const constellationSvg = d3.select('#constellation-svg');
+            const cWidth = 200;
+            const cHeight = 150;
+            const padding = 20;
+            
+            // Create 3D to 2D minimap projection
+            const miniScale = (cWidth - 2 * padding) / 8; // Scale for 0-3 range on each axis
+            
+            // Draw grid lines
+            const gridGroup = constellationSvg.append('g')
+                .attr('class', 'constellation-grid');
+            
+            // X-axis grid lines
+            for (let i = 0; i <= 3; i++) {
+                const x = padding + (i / 3) * (cWidth - 2 * padding);
+                gridGroup.append('line')
+                    .attr('x1', x)
+                    .attr('y1', padding)
+                    .attr('x2', x)
+                    .attr('y2', cHeight - padding)
+                    .attr('stroke', '#ddd')
+                    .attr('stroke-width', 0.5);
+            }
+            
+            // Y-axis grid lines  
+            for (let i = 0; i <= 3; i++) {
+                const y = padding + (i / 3) * (cHeight - 2 * padding);
+                gridGroup.append('line')
+                    .attr('x1', padding)
+                    .attr('y1', y)
+                    .attr('x2', cWidth - padding)
+                    .attr('y2', y)
+                    .attr('stroke', '#ddd')
+                    .attr('stroke-width', 0.5);
+            }
+            
+            // Create groups for different layers
+            constellationSvg.append('g').attr('class', 'constellation-heatmap');
+            constellationSvg.append('g').attr('class', 'constellation-trails');
+            constellationSvg.append('g').attr('class', 'constellation-points');
+        }
+        
+        // Update constellation mini-map
+        function updateConstellation() {
+            const constellationSvg = d3.select('#constellation-svg');
+            const cWidth = 200;
+            const cHeight = 150;
+            const padding = 20;
+            
+            // Add current state to history
+            const stateKey = `${currentState.signal}-${currentState.dependencies}-${currentState.error}`;
+            stateHistory.push({...currentState, timestamp: Date.now()});
+            
+            // Update frequency count
+            stateFrequency[stateKey] = (stateFrequency[stateKey] || 0) + 1;
+            
+            // Limit history length
+            if (stateHistory.length > stateHistoryMax) {
+                stateHistory.shift();
+            }
+            
+            // Project state to 2D minimap coordinates
+            // Use signal as X, dependencies as Y, and show error as color/size
+            function projectToMinimap(state) {
+                const x = padding + (state.signal / 3) * (cWidth - 2 * padding);
+                const y = cHeight - padding - (state.dependencies / 3) * (cHeight - 2 * padding);
+                return {x, y, error: state.error};
+            }
+            
+            // Update heat map for frequently visited states
+            const heatmapGroup = constellationSvg.select('.constellation-heatmap');
+            heatmapGroup.selectAll('*').remove();
+            
+            Object.entries(stateFrequency).forEach(([key, count]) => {
+                if (count > 2) { // Only show states visited more than twice
+                    const [signal, deps, error] = key.split('-').map(Number);
+                    const pos = projectToMinimap({signal, dependencies: deps, error});
+                    
+                    heatmapGroup.append('circle')
+                        .attr('class', 'constellation-heat')
+                        .attr('cx', pos.x)
+                        .attr('cy', pos.y)
+                        .attr('r', Math.min(20, 5 + count * 2))
+                        .attr('fill', '#ff6b6b')
+                        .attr('opacity', Math.min(0.3, count * 0.05));
+                }
+            });
+            
+            // Draw trails between consecutive states
+            const trailsGroup = constellationSvg.select('.constellation-trails');
+            trailsGroup.selectAll('*').remove();
+            
+            if (stateHistory.length > 1) {
+                const lineGenerator = d3.line()
+                    .x(d => projectToMinimap(d).x)
+                    .y(d => projectToMinimap(d).y)
+                    .curve(d3.curveCardinal.tension(0.5));
+                
+                // Draw fading trail
+                for (let i = 1; i < stateHistory.length; i++) {
+                    const segment = [stateHistory[i-1], stateHistory[i]];
+                    const age = (Date.now() - stateHistory[i].timestamp) / 10000; // Age in 10s of seconds
+                    const opacity = Math.max(0.1, 0.6 * (1 - age));
+                    
+                    trailsGroup.append('path')
+                        .datum(segment)
+                        .attr('class', 'constellation-trail')
+                        .attr('d', lineGenerator)
+                        .attr('opacity', opacity);
+                }
+            }
+            
+            // Draw recent state points
+            const pointsGroup = constellationSvg.select('.constellation-points');
+            pointsGroup.selectAll('*').remove();
+            
+            // Show last 5 states
+            const recentStates = stateHistory.slice(-5);
+            recentStates.forEach((state, i) => {
+                const pos = projectToMinimap(state);
+                const isCurrentState = i === recentStates.length - 1;
+                
+                pointsGroup.append('circle')
+                    .attr('class', isCurrentState ? 'constellation-current' : 'constellation-point')
+                    .attr('cx', pos.x)
+                    .attr('cy', pos.y)
+                    .attr('r', isCurrentState ? 6 : 3)
+                    .attr('opacity', isCurrentState ? 1 : 0.5 + (i / recentStates.length) * 0.5);
+            });
+            
+            // Add axis labels
+            if (!constellationSvg.select('.axis-labels').node()) {
+                const labelsGroup = constellationSvg.append('g').attr('class', 'axis-labels');
+                
+                // X-axis label
+                labelsGroup.append('text')
+                    .attr('x', cWidth / 2)
+                    .attr('y', cHeight - 5)
+                    .attr('text-anchor', 'middle')
+                    .style('font-size', '9px')
+                    .style('fill', '#666')
+                    .text('Signal →');
+                
+                // Y-axis label
+                labelsGroup.append('text')
+                    .attr('x', 10)
+                    .attr('y', cHeight / 2)
+                    .attr('text-anchor', 'middle')
+                    .attr('transform', `rotate(-90, 10, ${cHeight / 2})`)
+                    .style('font-size', '9px')
+                    .style('fill', '#666')
+                    .text('Dependencies →');
+            }
+        }
+        
+        // Draw living annotations at extreme states
+        function drawLivingAnnotations() {
+            // Remove old annotations
+            g.selectAll('.living-annotation').remove();
+            
+            const annotations = [
+                {
+                    position: [0, 0, 0],
+                    label: "Crisis Point",
+                    color: "#dc2626",
+                    pulseRadius: [20, 25],
+                    description: "System breakdown"
+                },
+                {
+                    position: [3, 3, 3],
+                    label: "Peak Performance",
+                    color: "#10b981",
+                    pulseRadius: [20, 25],
+                    description: "Transcendent flow"
+                },
+                {
+                    position: [2, 1, 2],
+                    label: "Sweet Spot",
+                    color: "#9333ea",
+                    pulseRadius: [15, 20],
+                    description: "Optimal balance"
+                }
+            ];
+            
+            annotations.forEach((annotation, i) => {
+                const pos3D = project3D(
+                    annotation.position[0],
+                    primarySurface(annotation.position[0], annotation.position[1]) + 0.5,
+                    annotation.position[1]
+                );
+                
+                const annotationGroup = g.append('g')
+                    .attr('class', 'living-annotation')
+                    .attr('transform', `translate(${pos3D.x}, ${pos3D.y})`);
+                
+                // Pulsing circle
+                const pulseCircle = annotationGroup.append('circle')
+                    .attr('r', annotation.pulseRadius[0])
+                    .attr('fill', 'none')
+                    .attr('stroke', annotation.color)
+                    .attr('stroke-width', 2)
+                    .attr('opacity', 0.3);
+                
+                // Animate pulse
+                pulseCircle
+                    .append('animate')
+                    .attr('attributeName', 'r')
+                    .attr('values', `${annotation.pulseRadius[0]};${annotation.pulseRadius[1]};${annotation.pulseRadius[0]}`)
+                    .attr('dur', '3s')
+                    .attr('repeatCount', 'indefinite');
+                
+                pulseCircle
+                    .append('animate')
+                    .attr('attributeName', 'opacity')
+                    .attr('values', '0.3;0.1;0.3')
+                    .attr('dur', '3s')
+                    .attr('repeatCount', 'indefinite');
+                
+                // Center dot
+                annotationGroup.append('circle')
+                    .attr('r', 4)
+                    .attr('fill', annotation.color)
+                    .attr('stroke', 'white')
+                    .attr('stroke-width', 2);
+                
+                // Label background
+                const labelBg = annotationGroup.append('rect')
+                    .attr('x', -50)
+                    .attr('y', -35)
+                    .attr('width', 100)
+                    .attr('height', 22)
+                    .attr('rx', 11)
+                    .attr('fill', 'rgba(255, 255, 255, 0.9)')
+                    .attr('stroke', annotation.color)
+                    .attr('stroke-width', 1)
+                    .style('opacity', 0);
+                
+                // Label text
+                const labelText = annotationGroup.append('text')
+                    .attr('y', -20)
+                    .attr('text-anchor', 'middle')
+                    .style('font-size', '12px')
+                    .style('font-weight', '600')
+                    .style('fill', annotation.color)
+                    .style('opacity', 0)
+                    .text(annotation.label);
+                
+                // Show label on hover
+                annotationGroup
+                    .on('mouseover', function() {
+                        labelBg.transition().duration(200).style('opacity', 1);
+                        labelText.transition().duration(200).style('opacity', 1);
+                    })
+                    .on('mouseout', function() {
+                        labelBg.transition().duration(400).style('opacity', 0);
+                        labelText.transition().duration(400).style('opacity', 0);
+                    });
+            });
+        }
+        
+        // Draw phenomenological territories
+        function drawPhenomenologicalTerritories() {
+            // Remove old territories
+            g.selectAll('.territory-region').remove();
+            
+            const territories = [
+                {
+                    bounds: [[2, 2, 2], [3, 3, 3]], 
+                    name: "Flow States", 
+                    color: "rgba(16, 185, 129, 0.08)",
+                    hoverColor: "rgba(16, 185, 129, 0.15)"
+                },
+                {
+                    bounds: [[0, 0, 0], [1, 1, 1]], 
+                    name: "Struggle Zone", 
+                    color: "rgba(220, 38, 38, 0.08)",
+                    hoverColor: "rgba(220, 38, 38, 0.15)"
+                },
+                {
+                    bounds: [[1, 2, 2], [2, 3, 3]], 
+                    name: "Sweet Spots", 
+                    color: "rgba(147, 51, 234, 0.08)",
+                    hoverColor: "rgba(147, 51, 234, 0.15)"
+                },
+                {
+                    bounds: [[2, 0, 1], [3, 1, 2]], 
+                    name: "Clarity Cascade", 
+                    color: "rgba(59, 130, 246, 0.08)",
+                    hoverColor: "rgba(59, 130, 246, 0.15)"
+                }
+            ];
+            
+            territories.forEach(territory => {
+                // Calculate center of territory
+                const centerX = (territory.bounds[0][0] + territory.bounds[1][0]) / 2;
+                const centerY = -0.5; // Place just below the surface
+                const centerZ = (territory.bounds[0][2] + territory.bounds[1][2]) / 2;
+                const center3D = project3D(centerX, centerY, centerZ);
+                
+                // Create invisible hit area for the territory
+                const width = (territory.bounds[1][0] - territory.bounds[0][0] + 1) * scale * 0.7;
+                const height = (territory.bounds[1][2] - territory.bounds[0][2] + 1) * scale * 0.7;
+                
+                const territoryGroup = g.append('g')
+                    .attr('class', 'territory-region')
+                    .style('opacity', 0);
+                
+                // Add subtle background rect
+                territoryGroup.append('rect')
+                    .attr('x', center3D.x - width/2)
+                    .attr('y', center3D.y - height/2)
+                    .attr('width', width)
+                    .attr('height', height)
+                    .attr('rx', 10)
+                    .attr('fill', territory.color)
+                    .attr('stroke', 'none')
+                    .style('mix-blend-mode', 'multiply');
+                
+                // Add territory label
+                territoryGroup.append('text')
+                    .attr('x', center3D.x)
+                    .attr('y', center3D.y)
+                    .attr('text-anchor', 'middle')
+                    .attr('dominant-baseline', 'middle')
+                    .style('font-size', '14px')
+                    .style('font-weight', '600')
+                    .style('fill', territory.color.replace('0.08', '0.8'))
+                    .style('letter-spacing', '1px')
+                    .style('text-transform', 'uppercase')
+                    .text(territory.name);
+                
+                // Add hover interactions
+                territoryGroup
+                    .on('mouseover', function() {
+                        d3.select(this)
+                            .transition()
+                            .duration(200)
+                            .style('opacity', 1);
+                        
+                        d3.select(this).select('rect')
+                            .attr('fill', territory.hoverColor);
+                    })
+                    .on('mouseout', function() {
+                        d3.select(this)
+                            .transition()
+                            .duration(400)
+                            .style('opacity', 0);
+                        
+                        d3.select(this).select('rect')
+                            .attr('fill', territory.color);
+                    });
+            });
         }
         
         } catch (error) {
