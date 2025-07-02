@@ -3,23 +3,28 @@
 COMPATIBILITY = "Cross-Model Pattern Framework"  
 VALIDATION_SCOPE = "Tested with: GPT-4.5, Claude Opus 4, Gemini 2.5, DeepSeek, Windsurf SWE-1"  
 
-## Core Principle: Tool Fit Over Introspection
 
-VIBES measures processing friction, not neural architecture. Like testing if a hammer fits your hand, not trying to deduce your neural wiring from how it feels. Transformers don't introspect their inner states—they register affordance friction.
+## The Ergonomics of AI Tool Design
+
+This document provides a structured framework for evaluating and improving the ergonomics and affordances of tools and expression languages designed for LLM use.
+
+Much like how humans can instinctively gauge the ergonomics of a tool by using it, LLMs can be asked to describe the experience of using a tool surface (MCP servers, expression languages designed to be written by LLMs, etc). In this manner we can optimize the ergonomics of our tools for use by LLMs, and we can model and create _new_ expression languages and architectures explicitly designed to maximize LLM ergonomics. LLMs of course do not have interiority, but this approach (ascribing intentional stances to LLMs for instrumental purposes) is nevertheless instrumentally useful.
+
 
 ---
 
-## What This Document Is
 
-This specification provides a formal framework for evaluating and improving the ergonomics and affordances of tools and expression languages designed for LLM use by measuring computational fit between patterns and transformer processing.
+## Vibes Coordinate System
 
-**Important**: VIBES assessments are qualitative pattern recognition, not quantitative measurement. The framework helps identify and communicate pattern characteristics, not calculate precise metrics.
 
-**Note:** VIBES describes pattern properties using tool ergonomics metaphors. Preference language means structural fit, not psychological states.
+For the purposes of this document we will treat LLMs as black boxes. We will not attempt to engage with their inner workings. Instead, we will focus on what makes a tool surface (a repository, an expression language, etc) _ergonomic_ for an LLM. We will focus on what makes a tool have good ergonomics.
 
-## LLM-Native Assessment Framework
+This framework is qualitative and not quantitiatve. LLMs excel at answering qualitative questions, but if asked to compute a qualitative value (eg Kolmogorov Complexity) they will just make something up and optimizing for what sounds right. With that in mind, we have designed the 3-axis vibes coordinate system in this spec to embrace the strengths of LLMs - pattern recognition and natural language understanding—while avoiding reliance on computational analysis. The framework provides a shared vocabulary for discussing code quality in terms that align with how transformers process and understand code, not as a replacement for traditional static analysis tools.
 
-VIBES is a pattern language for LLMs - explicitly designed for qualitative, pattern-based evaluation by language models. It embraces the strengths of LLMs—pattern recognition and natural language understanding—while avoiding reliance on computational analysis. The framework provides a shared vocabulary for discussing code quality in terms that align with how transformers process and understand code, not as a replacement for traditional static analysis tools. The emoji-based ratings are intentionally qualitative, reflecting the probabilistic nature of LLM assessments rather than precise metrics.
+
+The emoji-based ratings are intentionally qualitative, reflecting the probabilistic nature of LLM assessments rather than precise metrics. (TODO: 1-2 sentences introducing the axes, maybe mini-QRC?
+
+
 
 ---
 
@@ -98,6 +103,9 @@ Evaluates how much useful expressiveness a pattern enables without introducing r
   ```
 - **Why it matters**: LLMs can express naturally while staying safe
 
+TODO: use vision metaphor here, it's better.
+TODO: note this is about the _sharpness_ of constraint not the quantitiy.
+TODO: EG: `MonadIO m => ...`, `forall k. Functor k =>`, whatever. expressiveness of constraints, expressiveness of system.
 **🎯 Maximum**: Optimal expressive power with minimal necessary constraints.
 - **Example**: Well-designed DSLs, Haskell with good libraries
 - **Pattern**: Every valid computation expressible, constraints prevent only true errors
